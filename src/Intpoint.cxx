@@ -1,6 +1,7 @@
 #include <iostream>
 #include "TRandom3.h"
 #include "TMath.h"
+
 #include "Intpoint.h"
 
 using namespace TMath; 
@@ -10,14 +11,6 @@ ClassImp(Intpoint)
 
 //_____________________________________________________________________________________________
 //costruttore di default 
-#include "TMath.h"
-#include "Intpoint.h"
-
-using namespace TMath; 
-using namespace std;
-
-ClassImp(Intpoint)
-
 Intpoint :: Intpoint() : TObject(){
   fX=0;
   fY=0;
