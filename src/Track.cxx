@@ -37,11 +37,11 @@ Track :: Track (double x, double y, double z) : TObject(){
 
 //_____________________________________________________________________________________
 //Get per theta e phi
-double Track :: Gettheta () const{ 
+double Track :: GetTheta () const{ 
   return fTheta;
 }	
 
-double Track :: Getphi () const{ 
+double Track :: GetPhi () const{ 
   return fPhi;
 }  
 

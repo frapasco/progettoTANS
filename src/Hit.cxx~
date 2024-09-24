@@ -2,35 +2,34 @@
 #include "TRandom3.h"
 #include "TMath.h"
 
-#include "Intpoint.h"
+#include "Hit.h"
 
 using namespace TMath; 
-using namespace std;
 
-ClassImp(Intpoint)
+ClassImp(Hit)
 
 //_____________________________________________________________________________________________
-//costruttore di default 
-Intpoint :: Intpoint() : TObject(){
+//default constructor
+Hit :: Hit() : TObject(){
   fX=0;
   fY=0;
   fZ=0;
-  fLabeltrack=0;
+  fLabelTrack=0;
 } 
 
 //______________________________________________________________________________________________
-//costruttore standard, usato per memorizzare le coordinate dei punti di intersezione con beam pipe e rivelatori
-Intpoint :: Intpoint (double X, double Y, double Z, int label) : TObject(){
+//standard constructor, for storing hits on the beam pipe and detectors
+Hit :: Hit (double X, double Y, double Z, int label) : TObject(){
   fX=X;
   fY=Y;
   fZ=Z;
-  fLabeltrack=label;
+  fLabelTrack=label;
 }
 
 //______________________________________________________________________________________________
-//costruttore per generare noise  uniforme sui due rivelatori
-Intpoint :: Intpoint (double R, double L, int label) : TObject(){
-  fLabeltrack=label;
+//constructor that generates noise uniformly on the two detectors
+Hit :: Hit (double R, double L, int label) : TObject(){
+  fLabelTrack=label;
   double phi = gRandom->Rndm()*2*Pi();  
   fX=R*Cos(phi);
   fY=R*Sin(phi);
@@ -38,39 +37,39 @@ Intpoint :: Intpoint (double R, double L, int label) : TObject(){
 }
 
 //______________________________________________________________________________________________
-double Intpoint::Getx() const{ 
+double Hit::GetX() const{ 
   return fX;
 }
 
-double Intpoint::Gety() const{ 
+double Hit::GetY() const{ 
   return fY;
 }
 
-double Intpoint::Getz() const{ 
+double Hit::GetZ() const{ 
   return fZ;
 }
 
-//Get phi: angolo phi del punto di intersezione in coordinate cilindriche
-double Intpoint::Getphi() const{ 
-  if (fX==0&&fY==0) {cout<<"Errore: x=0 e y=0 in intersezione"<<endl; return -1000;}
+//GetPhi: method that gives the value of phi angle of intersection in cylindrical coords
+double Hit::GetPhi() const{ 
+  if (fX==0&&fY==0) {std::cout<<"Errore: x=0 e y=0 in intersezione"<<std::endl; return -1000;}
   if (fX==0&&fY>0) return Pi()/2;
   if (fX==0&&fY<0) return 3*Pi()/2;
   if (fX>0&&fY>=0) return ATan(fY/fX);
   if (fX>0&&fY<0) return ATan(fY/fX)+Pi()*2;
   if (fX<0&&fY>0) return ATan(fY/fX)+Pi();
   if (fX<0&&fY<=0) return ATan(fY/fX)+Pi();
-  cout<<"Errore in Intpoint::Getphi()"<<endl;
+  std::cout<<"Errore in Hit::Getphi()"<<std::endl;
   return 0;  
 }
  
-int Intpoint::Getlabel() const{ 
-  return fLabeltrack;
+int Hit::GetLabel() const{ 
+  return fLabelTrack;
 } 
 
 //______________________________________________________________________________________________
-//funzione per smearing 
-void Intpoint::Smearing(double R, double sigz, double sigt){
-  if (sigz<=0||sigt<=0) {cout<<"Errore inizializzazione parametri"<<endl; return;}
+//smearing function
+void Hit::Smearing(double R, double sigz, double sigt){
+  if (sigz<=0||sigt<=0) {std::cout<<"Error: set the parameters"<<std::endl; return;}
   double sz = sigz; //cm. Std dev ricostruzione in z
   double st = sigt; //cm. Std dev ricostruzione trasversale (R*phi)
    
@@ -87,6 +86,6 @@ void Intpoint::Smearing(double R, double sigz, double sigt){
 }
 
 //______________________________________________________________________________________________
-//distruttore
-Intpoint:: ~Intpoint(){ 
+//destructor implementation
+Hit:: ~Hit(){ 
 }

@@ -61,27 +61,27 @@ double Vertex::Var(double s){
 }
 
 //_____________________________________________________________________________________________
-double Vertex :: Getx() const{
+double Vertex :: GetX() const{
 	return fX;
 }
 
-double Vertex :: Gety() const{
+double Vertex :: GetY() const{
 	return fY;
 }
 
-double Vertex :: Getz() const{
+double Vertex :: GetZ() const{
 	return fZ;
 }
 
-double Vertex :: Getm() const{
+double Vertex :: GetM() const{
 	return fMulti;
 }
 
-double Vertex :: Getphi() const{
+double Vertex :: GetPhi() const{
 	return fPhi;
 }
 
-double Vertex :: Gettheta() const{
+double Vertex :: GetTheta() const{
 	return fTheta;
 }
 
@@ -115,7 +115,7 @@ void Vertex :: Multfunc(TString filename, TString muldis){
 //_______________________________________________________________
 //inizializza la direzione iniziale di un prodotto dal vertice primario, min e max per ridurre il range della distribuzione al range di proprio interesse (riducendo il numero di tracce fuori rivelatore a causa del loro theta)
 //attenzione in scelta max e min per non perdere una frazione troppo grande della distribuzione (molte estrazioni "a vuoto"); con -2\2 e la distribuzione assegnata, si preservano i significativi picchi centrali e non si perdono troppe estrazioni
-void Vertex :: Initialdir(double min, double max, TString filename, TString etadis){ 
+void Vertex :: InitialDir(double min, double max, TString filename, TString etadis){ 
   if(max<min){ //scambio estremi in modo che siano in ordine giusto
     double o=max; 
     max=min; 

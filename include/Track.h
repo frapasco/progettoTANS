@@ -18,8 +18,8 @@ public:
   virtual  ~Track();
   
   //get
-  double Gettheta() const;
-  double Getphi() const;
+  double GetTheta() const;
+  double GetPhi() const;
    
   bool Intersection(double x0, double y0, double z0, double &X, double &Y, double &Z, double R, double L); //intersezione con cilindro raggio R 
   void Intersection2(double x0, double y0, double z0, double &Z); //intersezione tracklet con piano x=0

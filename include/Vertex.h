@@ -17,15 +17,15 @@ public:
   Vertex(const Vertex &v); //copy constructor
   virtual ~Vertex();
             
-  void Initialdir(double min, double max, TString filename, TString etadis);//estrazione direzione prodotti di collisione
+  void InitialDir(double min, double max, TString filename, TString etadis);//estrazione direzione prodotti di collisione
   
   //get
-  double Getx() const;
-  double Gety() const;
-  double Getz() const;
-  double Getm() const;
-  double Getphi() const; 
-  double Gettheta() const; 
+  double GetX() const;
+  double GetY() const;
+  double GetZ() const;
+  double GetM() const;
+  double GetPhi() const; 
+  double GetTheta() const; 
   
   
 private:

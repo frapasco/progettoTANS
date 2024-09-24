@@ -10,7 +10,7 @@
 
 //headers includes
 #include "Track.h"
-#include "Intpoint.h"
+#include "Hit.h"
 #include "Vertex.h"
 
 using namespace std;
@@ -56,9 +56,9 @@ void simulazione(){
   if (kMul=="No"||kMul=="NO"||kMul=="no") a='N'; else a='S';
 
   //creazione array per punti di intersezione
-  TClonesArray *bp = new TClonesArray("Intpoint",100);//beam pipe
-  TClonesArray *clone1 = new TClonesArray("Intpoint",100);//primo rivelatore
-  TClonesArray *clone2 = new TClonesArray("Intpoint",100);//secondo rivelatore
+  TClonesArray *bp = new TClonesArray("Hit",100);//beam pipe
+  TClonesArray *clone1 = new TClonesArray("Hit",100);//primo rivelatore
+  TClonesArray *clone2 = new TClonesArray("Hit",100);//secondo rivelatore
   TClonesArray &intbp = *bp;
   TClonesArray &int1 = *clone1;  
   TClonesArray &int2 = *clone2;
@@ -98,28 +98,28 @@ void simulazione(){
   
       if (i%kStampasim==0) cout <<"\n \n  EVENTO  "<<i+1<<endl;	   
       vertice=new Vertex(kMul,filename,muldis,kSigmax,kSigmay,kSigmaz);    //creo vertice
-      nparticle=vertice->Getm(); 
+      nparticle=vertice->GetM(); 
       if (i%kStampasim==0) cout <<"Creato vertice"<<endl;
       //loop sul numero di particelle cariche generate  
       for (int j=0; j<nparticle; j++){  //loop su particelle prodotte 
-        vertice->Initialdir(kEtamin,kEtamax,filename,etadis);//creazione direzione iniziale 1 particella
-	  Track *tbp = new Track(vertice->Gettheta(),vertice->Getphi()); //track verso bp
+        vertice->InitialDir(kEtamin,kEtamax,filename,etadis);//creazione direzione iniziale 1 particella
+	  Track *tbp = new Track(vertice->GetTheta(),vertice->GetPhi()); //track verso bp
 	 
 	  //valutazione intersezione con BP
-        if (tbp->Intersection(vertice->Getx(),vertice->Gety(),vertice->Getz(),Xbp,Ybp,Zbp,kRbp,kL)){}; //lunghezza infinita, non conta (bool restituito dalla funzione) se interseca entro +\-L/2
-	  new (intbp[j]) Intpoint (Xbp,Ybp,Zbp,j) ;
+        if (tbp->Intersection(vertice->GetX(),vertice->GetY(),vertice->GetZ(),Xbp,Ybp,Zbp,kRbp,kL)){}; //lunghezza infinita, non conta (bool restituito dalla funzione) se interseca entro +\-L/2
+	  new (intbp[j]) Hit (Xbp,Ybp,Zbp,j) ;
         tbp->Multiplescattering(kMs);//multiple scatter
-	  Track *t1 = new Track(tbp->Gettheta(),tbp->Getphi()); //traccia verso T1
+	  Track *t1 = new Track(tbp->GetTheta(),tbp->GetPhi()); //traccia verso T1
      	   	
      	  //valutazione intersezione con T1 e se esiste proseguo per T2 da T1 con MS
      	  if(t1->Intersection(Xbp,Ybp,Zbp,X1,Y1,Z1,kR1,kL)){  
-          new (int1[j-lost1]) Intpoint (X1,Y1,Z1,j); 
+          new (int1[j-lost1]) Hit (X1,Y1,Z1,j); 
 	    t1->Multiplescattering(kMs);
-	    Track *t2 = new Track(t1->Gettheta(),t1->Getphi()); //traccia verso T2
+	    Track *t2 = new Track(t1->GetTheta(),t1->GetPhi()); //traccia verso T2
 	            
 	    //valutazione intersezione con T2
 	    if(t2->Intersection(X1,Y1,Z1,X2,Y2,Z2,kR2,kL)){   
-            new (int2[j-lost2]) Intpoint (X2,Y2,Z2,j);
+            new (int2[j-lost2]) Hit (X2,Y2,Z2,j);
 	    }else{
 	      lost2++;
 	    }  
@@ -127,7 +127,7 @@ void simulazione(){
 	    delete t2;
 	  }else{//valutazione intersezione con T2 per tracce fuori da T1
           if(t1->Intersection(Xbp,Ybp,Zbp,X2,Y2,Z2,kR2,kL)){   
-            new (int2[j-lost2]) Intpoint (X2,Y2,Z2,j);
+            new (int2[j-lost2]) Hit (X2,Y2,Z2,j);
 	    }else {
             lost2++; 
             lostall++;

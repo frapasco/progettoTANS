@@ -2,7 +2,7 @@
 #include <iostream>
 
 #include "./include/Track.h"
-#include "./include/Intpoint.h"
+#include "./include/Hit.h"
 #include "./include/Vertex.h"
 #include "./include/simulation.h"
 

@@ -6,8 +6,8 @@ void compilevertex (TString myopt="fast"){
   gSystem->AddIncludePath("-I./include");
   gSystem->CompileMacro("./src/Vertex.cxx", opt.Data());
   gSystem->CompileMacro("./src/Track.cxx", opt.Data()); 
-  gSystem->CompileMacro("./src/Intpoint.cxx", opt.Data()); 
+  gSystem->CompileMacro("./src/Hit.cxx", opt.Data()); 
   gSystem->CompileMacro("./macros/simulation.cxx", opt.Data()); 
-  //gSystem->CompileMacro ("./macros/reconstraction.C", opt.Data()); 
-  //gSystem->CompileMacro ("./src/canvasses.C", opt.Data()); 
+  gSystem->CompileMacro ("./macros/reconstruction.cxx", opt.Data()); 
+  //gSystem->CompileMacro ("./macros/canvasses.C", opt.Data()); 
 }
