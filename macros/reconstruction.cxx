@@ -18,7 +18,7 @@
 #include "Vertex.h"
 #include "Track.h"
 #include "Hit.h"
-
+//STOCAZZO
 using namespace std;
 const int kVerbosity=1; //verbosity
 const int kLimit1=17; //last bin to read for histograms for given multiplicity
@@ -39,7 +39,7 @@ const string kData="data.txt";//file da cui leggere caratteristiche run
 //risoluzione vs ztrue)
 ////////////////////////////////////////////////////////////////////
 
-void plot(const vector <double>* const vztruep,const  vector <double>* const vzrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multibin, const int arraylenghtmulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaz, const double * const zbin, const int arraylenghtz, TH1D *totz, const int sizetrue);
+void plot(const vector <double>* const vztruep,const  vector <double>* const vzgrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multibin, const int arraylenghtmulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaz, const double * const zbin, const int arraylenghtz, TH1D *totz, const int sizetrue);
 
 ////////////////////////////////////////////////////////////////////
 //Funzione per aggiungere smearing ai punti di intersezione e generare
