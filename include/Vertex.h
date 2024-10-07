@@ -11,15 +11,15 @@
 class Vertex : public TObject {  
 
 public:  
-  //costruttori e distruttore
+  //constructors and destructor
   Vertex();                
-  Vertex(TString multv, TString filename, TString muldis, double sigmax, double sigmay, double sigmaz, int u1=1, int u2=90); //multv=scelta distribuzione molteplicità
+  Vertex(TString multV, TString fileName, TString multDist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90); //multV=distribution choice for multiplicity
   Vertex(const Vertex &v); //copy constructor
   virtual ~Vertex();
             
-  void InitialDir(double min, double max, TString filename, TString etadis);//estrazione direzione prodotti di collisione
+  void InitialDir(double min, double max, TString fileName, TString etaDist); //direction setter for collision products
   
-  //get
+  //getters
   double GetX() const;
   double GetY() const;
   double GetZ() const;
@@ -29,13 +29,14 @@ public:
   
   
 private:
-  double fX, fY, fZ;//coordinate vertice
-  int fMulti;//numero di particelle cariche da collisione (molteplicità)
-  double fPhi,fTheta;//angoli polare e azimutale di prodotti
+  double fX, fY, fZ; //vertex coordinates
+  int fMulti; //multiplicity of particles per vertex
+ 
+  double fPhi,fTheta;//polar and azimuthal angles
   
-  double Var(double s); //estrazione gaussiana con Box-Muller
-  void Multunif(int u1, int u2); //estrazione molteplicità uniforme fra u1 e u2
-  void Multfunc(TString filename, TString muldis); //estrazione molteplicità da distribuzione data (istogramma in file)
+  double Var(double s); //Box-Muller extraction for Gaussian
+  void MultUnif(int u1, int u2); //uniform extraction for multiplicity in the interval [u1,u2]
+  void MultFunc(TString fileName, TString multDist); //multiplicity from a given distribution
  
   ClassDef(Vertex,1);
 };  

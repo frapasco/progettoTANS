@@ -14,149 +14,150 @@
 #include "Vertex.h"
 
 using namespace std;
-//tutte le dimensioni si intendono in cm
-//variabili globali
-const double kRbp=3.04; //raggio beam pipe (a metà spessore)
-const double kR1=4.01; //raggio primo rivelatore (T1) (a metà spessore)
-const double kR2=7.01; //raggio secondo rivelatore (T2) (a metà spessore)
-const double kL=27;//lunghezza rivelatori
+//measurements are given in cm and radii are taken at half width
+//global variables
+const double kRbp=3.04; //beam pipe radius (half width)
+const double kR1=4.01; //radius of first detector (T1) (half width)
+const double kR2=7.01; //radius of second detector (T2) (half width)
+const double kL=27; //detector lenght
 
-const double kSigmax=0.01; //spread gaussiano (sigma) delle coordinate del vertice attorno a (0,0,0)
+const double kSigmax=0.01; //Gaussian spread (sigma) of the vertex around (0,0,0)
 const double kSigmay=0.01;
 const double kSigmaz=5.3;
 
-const int kEvents=20;//numero vertici primari (PV) generati
-const double kEtamin=-2.;//limiti in pseudorapidità entro cui si generano le tracce dei prodotti (limiti imposti su istogramma di distribuzione eta)
+const int kEvents=20; //number of primary vertexes
+const double kEtamin=-2.;//boundaries for the eta distribution histo for generating tracks
 const double kEtamax=+2.;
 
-const TString kMul="sì"; //scelta distribuzione di molteplicità("sì"=distribuzione assegnata; "No","NO","no"=uniforme)
-const bool kMs=true;//multiple scattering (true=attivo)
-const int kStampasim=1;//ogni quanti eventi fa stampe
-const unsigned int kSeed=18; //seed per estrazione random (TRandom3)
+const TString kMul="sì"; //molteplicity options ("sì"=given distrib.; "No","NO","no"=uniform)
+const bool kMs=true;//multiple scattering (true=ON)
+const int kVerbosity=1;//verbosity
+const unsigned int kSeed=18; //seed for TRandom3
 
-const TString kFile="simulazione.root";//file per salvare tree
+const TString kFile="simulazione.root";//output file
 
 ////////////////////////////////////////////////////////////////////
-//Funzione per generare i vertici primari e memorizzare i punti
-//di impatto delle particelle sui diversi piani di rivelazione.
-////////////////////////////////////////////////////////////////////
 
-void simulazione(){
-  if(kR1<=kRbp||kR2<=kR1||kRbp<=0||kEvents<=0||kEtamax<=kEtamin||kL<=0||kSigmaz<=0||kSigmax<=0||kSigmay<=0||kStampasim<=0){
-    cout<<"Errore nel setting dei parametri"<<endl; 
+void simulation(){
+  if(kR1<=kRbp||kR2<=kR1||kRbp<=0||kEvents<=0||kEtamax<=kEtamin||kL<=0||kSigmaz<=0||kSigmax<=0||kSigmay<=0||kVerbosity<=0){
+    cout<<"Error in parameters setting"<<endl; 
     return;
   }
-    
+  
   gRandom->SetSeed(kSeed);
-   
-  TString filename="kinem.root"; //nome file (e istogrammi al suo interno) per distribuzioni eta e molteplicità
-  TString muldis="hmul";
-  TString etadis="heta";
+  
+  //file and histograms for initial distributions
+  TString fileName="kinem.root";
+  TString multDistr="hmul";
+  TString etaDistr="heta";
   char a;
   if (kMul=="No"||kMul=="NO"||kMul=="no") a='N'; else a='S';
-
-  //creazione array per punti di intersezione
+  
+  //storing arrays for intersection points
   TClonesArray *bp = new TClonesArray("Hit",100);//beam pipe
-  TClonesArray *clone1 = new TClonesArray("Hit",100);//primo rivelatore
-  TClonesArray *clone2 = new TClonesArray("Hit",100);//secondo rivelatore
+  TClonesArray *clone1 = new TClonesArray("Hit",100);//first detector
+  TClonesArray *clone2 = new TClonesArray("Hit",100);//second detector
   TClonesArray &intbp = *bp;
   TClonesArray &int1 = *clone1;  
   TClonesArray &int2 = *clone2;
   
-  int nparticle;//numero particelle prodotte
+  int nParticle;//number of produced particles
   
-  //file per passare dati al codice per la ricostruzione
+  //output file for reconstruction purposes
   FILE *hdata = fopen("data.txt","w");
   fprintf (hdata, "%f %f %f %f %d %c", (float) kR1, (float) kR2, (float) kL, (float) kSigmaz, kEvents, a);	
   fclose (hdata);
   
-  //creazione puntatore a oggetto Vertex
-  Vertex *vertice = NULL;
- 
-  //creazione TFile, TTree e Branches
+  //creation of a Vertex
+  Vertex *vertex = NULL;
+  
+  //creation TFile, TTree and Branches
   TFile  *hfile = TFile::Open(kFile,"RECREATE");
   TTree *tree = new TTree("tree", "eventi");
-  tree->Branch("Vertext",&vertice);//PV
-  tree->Branch("tclonebp",&bp);//intersezione BP
-  tree->Branch("tclone1",&clone1);//intersezione T1
-  tree->Branch("tclone2",&clone2);//intersezione T2
-    
-  //variabili per salvare coordinate hit
+  tree->Branch("Vertext",&vertex); //PV
+  tree->Branch("tclonebp",&bp); //intersection BP
+  tree->Branch("tclone1",&clone1); //intersection T1
+  tree->Branch("tclone2",&clone2); //intersection T2
+  
+  //hit scoring variables
   double X1,Y1,Z1;
   double X2,Y2,Z2;
   double Xbp,Ybp,Zbp;
-  int lost1, lost2, lostall;//tracce non viste da T1, T2, entrambi
-  int vertexnohit=0;//numero vertici in totale senza nessun hit   
+  int lost1, lost2, lostAll; //no interactions with: T1, T2, both
+  int vertexNoHit=0; //total number of vertexes without interactions
   
-  tree->SetDirectory(hfile);//assicurazione che il tree appartenga al file voluto
- 
-  //loop sul numero di vertici
+  tree->SetDirectory(hfile); //setting for correct file output
+  
+  //loop on vertexes
   for(int i=0; i<kEvents;i++){   
-      lost1=0;
-      lost2=0;
-      lostall=0;
-  
-      if (i%kStampasim==0) cout <<"\n \n  EVENTO  "<<i+1<<endl;	   
-      vertice=new Vertex(kMul,filename,muldis,kSigmax,kSigmay,kSigmaz);    //creo vertice
-      nparticle=vertice->GetM(); 
-      if (i%kStampasim==0) cout <<"Creato vertice"<<endl;
-      //loop sul numero di particelle cariche generate  
-      for (int j=0; j<nparticle; j++){  //loop su particelle prodotte 
-        vertice->InitialDir(kEtamin,kEtamax,filename,etadis);//creazione direzione iniziale 1 particella
-	  Track *tbp = new Track(vertice->GetTheta(),vertice->GetPhi()); //track verso bp
-	 
-	  //valutazione intersezione con BP
-        if (tbp->Intersection(vertice->GetX(),vertice->GetY(),vertice->GetZ(),Xbp,Ybp,Zbp,kRbp,kL)){}; //lunghezza infinita, non conta (bool restituito dalla funzione) se interseca entro +\-L/2
-	  new (intbp[j]) Hit (Xbp,Ybp,Zbp,j) ;
-        tbp->Multiplescattering(kMs);//multiple scatter
-	  Track *t1 = new Track(tbp->GetTheta(),tbp->GetPhi()); //traccia verso T1
-     	   	
-     	  //valutazione intersezione con T1 e se esiste proseguo per T2 da T1 con MS
-     	  if(t1->Intersection(Xbp,Ybp,Zbp,X1,Y1,Z1,kR1,kL)){  
+    lost1=0;
+    lost2=0;
+    lostAll=0;
+    
+    if (i%kVerbosity==0) cout <<"\n \n  EVENTO  "<<i+1<<endl;	   
+    vertex=new Vertex(kMul,fileName,multDistr,kSigmax,kSigmay,kSigmaz); //vertex creation
+    
+    //oooOOOoooOOOoooOOOoooOOOoooOOOooo
+    //AAAAAAAAAA write a method that assignes the multiplicity via external loading of the TFILE
+    nParticle=vertex->GetM(); 
+      if (i%kVerbosity==0) cout <<"vertex created"<<endl;
+      //loop on charged particles created  
+      for (int j=0; j<nParticle; j++){  //loop on created particles
+        vertex->InitialDir(kEtamin,kEtamax,fileName,etaDistr);//setting of initial direction
+	Track *tbp = new Track(vertex->GetTheta(),vertex->GetPhi()); //propagating towards beam pipe
+	
+	//intersection with BP
+        if (tbp->Intersection(vertex->GetX(),vertex->GetY(),vertex->GetZ(),Xbp,Ybp,Zbp,kRbp,kL)){}; //the lenght of the BP is infinite but the only intersections we keep are the ones in (-L/2,L/2)
+	new (intbp[j]) Hit (Xbp,Ybp,Zbp,j) ;
+        tbp->MultipleScattering(kMs);//multiple scatter
+	Track *t1 = new Track(tbp->GetTheta(),tbp->GetPhi()); //propagating towards T1
+     	
+	//intersection with T1
+	if(t1->Intersection(Xbp,Ybp,Zbp,X1,Y1,Z1,kR1,kL)){  
           new (int1[j-lost1]) Hit (X1,Y1,Z1,j); 
-	    t1->Multiplescattering(kMs);
-	    Track *t2 = new Track(t1->GetTheta(),t1->GetPhi()); //traccia verso T2
-	            
-	    //valutazione intersezione con T2
-	    if(t2->Intersection(X1,Y1,Z1,X2,Y2,Z2,kR2,kL)){   
+	  t1->MultipleScattering(kMs);
+	  Track *t2 = new Track(t1->GetTheta(),t1->GetPhi()); //propating towards T2
+	  
+	//intersection with T2
+	  if(t2->Intersection(X1,Y1,Z1,X2,Y2,Z2,kR2,kL)){   
             new (int2[j-lost2]) Hit (X2,Y2,Z2,j);
-	    }else{
-	      lost2++;
-	    }  
-	    
-	    delete t2;
-	  }else{//valutazione intersezione con T2 per tracce fuori da T1
+	  }else{
+	    lost2++;
+	  }  
+	  
+	  delete t2;
+	}else{//checking for intersections with T2 but not T1
           if(t1->Intersection(Xbp,Ybp,Zbp,X2,Y2,Z2,kR2,kL)){   
             new (int2[j-lost2]) Hit (X2,Y2,Z2,j);
-	    }else {
+	  }else {
             lost2++; 
-            lostall++;
+            lostAll++;
           }
- 	      lost1++;
-	  }
-	  
-	  delete t1;     
-    	  delete tbp;			
+	  lost1++;
+	}
+	
+	delete t1;     
+	delete tbp;			
       }
-        
-      if (i%kStampasim==0) cout<<"Valutati hit"<<endl; 
+      
+      if (i%kVerbosity==0) cout<<"Valutati hit"<<endl; 
       
       //riempimento Tree
       tree->Fill(); 
-      if (lostall==nparticle) vertexnohit++; 
+      if (lostAll==nParticle) vertexNoHit++; 
       clone1->Clear(); //pulizia TClone per evento successivo
       clone2->Clear(); 
       bp->Clear();
-      delete vertice;//eliminazione Vertex per evento dopo
+      delete vertex;//eliminazione Vertex per evento dopo
   }
   cout<<endl;
-  cout<<"Su "<<kEvents<<" vertici generati, "<<vertexnohit<<" non hanno lasciato hit in nessuno dei due tracker"<<endl;	
+  cout<<"Su "<<kEvents<<" vertici generati, "<<vertexNoHit<<" non hanno lasciato hit in nessuno dei due tracker"<<endl;	
   hfile->cd(); //selezione di hfile come directory
   tree->Write();//scrittura TTree
   delete bp;
   delete clone1;
   delete clone2;
   hfile->Close();//chiusura file
-   
+  
   cout<<"Simulazione completata"<<endl;
 }

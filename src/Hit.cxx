@@ -37,6 +37,7 @@ Hit :: Hit (double R, double L, int label) : TObject(){
 }
 
 //______________________________________________________________________________________________
+//Getters
 double Hit::GetX() const{ 
   return fX;
 }
@@ -51,15 +52,15 @@ double Hit::GetZ() const{
 
 //GetPhi: method that gives the value of phi angle of intersection in cylindrical coords
 double Hit::GetPhi() const{ 
-  if (fX==0&&fY==0) {std::cout<<"Errore: x=0 e y=0 in intersezione"<<std::endl; return -1000;}
+  if (fX==0&&fY==0) {std::cout<<"Error: x=0 and  y=0 intersection"<<std::endl; return -1000;}
   if (fX==0&&fY>0) return Pi()/2;
   if (fX==0&&fY<0) return 3*Pi()/2;
   if (fX>0&&fY>=0) return ATan(fY/fX);
   if (fX>0&&fY<0) return ATan(fY/fX)+Pi()*2;
   if (fX<0&&fY>0) return ATan(fY/fX)+Pi();
   if (fX<0&&fY<=0) return ATan(fY/fX)+Pi();
-  std::cout<<"Errore in Hit::GetPhi()"<<std::endl;
-  return 0;  
+  std::cout<<"Error in Hit::GetPhi()"<<std::endl;
+  return 0.;  
 }
  
 int Hit::GetLabel() const{ 
@@ -70,15 +71,15 @@ int Hit::GetLabel() const{
 //smearing function
 void Hit::Smearing(double R, double sigz, double sigt){
   if (sigz<=0||sigt<=0) {std::cout<<"Error: set the parameters"<<std::endl; return;}
-  double sz = sigz; //cm. Std dev ricostruzione in z
-  double st = sigt; //cm. Std dev ricostruzione trasversale (R*phi)
+  double sz = sigz; //cm. Std dev ricostruzione in zz reco
+  double st = sigt; //cm. Std dev transverse reco (R*phi)
    
-  double zrec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*sz; //smearing in z
-  double arec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*st;// smearing trasversale
+  double zrec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*sz; //z smearing 
+  double arec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*st; //transverse smearing
   
-  double phirec = this->GetPhi()+arec/R;//angolo phi dopo smearing
+  double phirec = this->GetPhi()+arec/R; //phi angle after smearing
   
-  //coordinate dopo smearing
+  //final coordinates
   fX=R*Cos(phirec);
   fY=R*Sin(phirec);
   fZ=fZ+zrec;

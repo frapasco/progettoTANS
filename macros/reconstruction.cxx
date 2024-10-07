@@ -20,11 +20,12 @@
 #include "Hit.h"
 
 using namespace std;
-const int kStamparic=1;//ogni quanti eventi fare stampe
-const int kLimit1=17;//elemento di array di limiti bin istogramma (per grafici in funzione di molteplicità) a cui fermarsi per molteplicità da distribuzione assegnata
-const int kLimit2=21;//analogo per molteplicità uniforme
-const double kNoisefrac=1.2;// numero punti noise/molteplicità
-const double kPhiMax=0.01;//sfasamento massimo fra due punti fra cui creare tracklet (valutato per eccesso fra punti di una stessa traccia da simulazione+ricostruzione indipendenti)
+const int kVerbosity=1; //verbosity
+const int kLimit1=17; //last bin to read for histograms for given multiplicity
+const int kLimit2=21; //last bin to read for histograms for uniform multiplicity
+const double kNoisefrac=1.2; //ratio for noise/multiplicity points
+const double kPhiMax=0.01; //max angle between points for creating tracklets (AAAAAAAA leggitelo meglio)
+//sfasamento massimo fra due punti fra cui creare tracklet (valutato per eccesso fra punti di una stessa traccia da simulazione+ricostruzione indipendenti)
 const double kRange=0.1; //range, attorno al picco dell'istogramma delle intersezioni delle tracklet, entro cui mediare le intersezioni per ricostruire z del vertice
 
 const TString kSim="simulazione.root";//file da cui leggere eventi
@@ -82,7 +83,7 @@ void ricostruzione(){
   treerec->SetDirectory(hfilerec);
    
   //istogrammi per ricostruzione PV in z
-  if(step<=0||kStamparic<=0||kNoisefrac<=0||kPhiMax<=0||kRange<=0){
+  if(step<=0||kVerbosity<=0||kNoisefrac<=0||kPhiMax<=0||kRange<=0){
     cout<<"Errore nei parametri forniti "<<endl; 
     return;
   }
@@ -174,7 +175,7 @@ void ricostruzione(){
 	
   //loop sul numero di eventi (entrate di treelec)
   for(int ev=0;ev<treelec->GetEntries();ev++){
-    if (ev%kStamparic==0) cout <<"\n \n EVENTO  "<<ev+1<<endl;
+    if (ev%kVerbosity==0) cout <<"\n \n EVENTO  "<<ev+1<<endl;
     Zintersection.clear();//pulizia vettore intersezioni
     Zintersection.reserve(200);
     out1=0;
@@ -223,8 +224,8 @@ void ricostruzione(){
 	  element2++;	
       }else out2++;      
     }	
-    if(ev%kStamparic==0)cout<<"Applicato smearing"<<endl;
-    if(ev%kStamparic==0)cout<<"Hit usciti da T1: "<<out1<<"  Hit usciti da T2: "<<out2<<endl;
+    if(ev%kVerbosity==0)cout<<"Applicato smearing"<<endl;
+    if(ev%kVerbosity==0)cout<<"Hit usciti da T1: "<<out1<<"  Hit usciti da T2: "<<out2<<endl;
         
     //aggiunta del noise
     int Nnoise = (int) (verlec->GetM())*kNoisefrac;//numero di punti di noise, assunto identico per T1 e T2
@@ -234,7 +235,7 @@ void ricostruzione(){
     for(int k=element2;k<element2+Nnoise; k++){
       new (int2[k]) Hit(R2,L);
     }
-    if (ev%kStamparic==0)cout<<"Applicato noise"<<endl;
+    if (ev%kVerbosity==0)cout<<"Applicato noise"<<endl;
        
     //inzio ricostruzione PV
     int Nrec1=intprec1->GetEntriesFast();//numero di elementi (hit+noise) in int1 e int2
@@ -267,7 +268,7 @@ void ricostruzione(){
       }
     }//fine for sui due TClone di intersezioni per fare tracklet
       
-    if (ev%kStamparic==0)cout<<"Create tracklet e riempito istogramma"<<endl;
+    if (ev%kVerbosity==0)cout<<"Create tracklet e riempito istogramma"<<endl;
     if (zintisto->GetEntries()!=0){//if per chiedere istogramma non vuoto
       int binmax= zintisto->GetMaximumBin(); //numero del bin col primo massimo dell'istogramma
       double zmax=(binmax-1)*step+zmin+step/2;//zmin è limite inferiore di range dell'ascissa di istogramma; centro di bin (in z) dove si ha primo massimo
@@ -291,7 +292,7 @@ void ricostruzione(){
 	  }
 	  if (denom>1) zrecrms=TMath::Sqrt(scarti/(denom-1)); //calcolo deviazione standard
 	  else {zrecrms=0.05;} //0.05 scelto come errore plausibile nel caso di una media calcolata su un singolo valore
-	  if (ev%kStamparic==0) cout<<"zrec= "<<zrec<<" +- "<<zrecrms<<endl;
+	  if (ev%kVerbosity==0) cout<<"zrec= "<<zrec<<" +- "<<zrecrms<<endl;
 	  vzrec->push_back(zrec);//riempimento vector
 	  vztrue->push_back(verlec->GetZ());	
 	  vzmulti->push_back(verlec->GetM());
@@ -300,7 +301,7 @@ void ricostruzione(){
       }//fine if denom>0
     }//fine richiesta istogramma non vuoto
    
-    if (ev%kStamparic==0){new TCanvas; zintisto->DrawCopy();} 
+    if (ev%kVerbosity==0){new TCanvas; zintisto->DrawCopy();} 
     if(verlec->GetZ()<1*sigmaz&&verlec->GetM()<multibin[limit]) tot1multi->Fill(verlec->GetM());  
     if(verlec->GetZ()<3*sigmaz&&verlec->GetM()<multibin[limit]) tot3multi->Fill(verlec->GetM());    
     totz->Fill(verlec->GetZ());//riempimento istogrammi con eventi totali simulati (efficenza=buoni/totali)
@@ -359,16 +360,16 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
   int min_mult2=45;
   int max_mult2=55;
   //residui con tutte le molteplicità
-  sprintf(nome,"isto_restot");
-  sprintf(titolo,"Residui con tutte le molteplicità");
+  snprintf(nome, sizeof(nome), "isto_restot");
+  snprintf(titolo, sizeof(titolo), "Residui con tutte le molteplicità");
   isto_res[0]=new TH1D(nome,titolo,500, -0.1, 0.1);
   //residui con molteplicità tra 3 e 5
-  sprintf(nome,"histo_res1");
-  sprintf(titolo,"%i <= molteplicita' <= %i",min_mult1,max_mult1);
+  snprintf(nome, sizeof(nome), "histo_res1");
+  snprintf(titolo, sizeof(titolo), "%i <= molteplicita' <= %i",min_mult1,max_mult1);
   isto_res[1]=new TH1D(nome,titolo,500, -0.1, 0.1);
   //residui con molteplicità tra 45 e 55
-  sprintf(nome,"histo_res2");
-  sprintf(titolo,"%i <= molteplicita' <= %i",min_mult2,max_mult2);
+  snprintf(nome, sizeof(nome), "histo_res2");
+  snprintf(titolo, sizeof(titolo), "%i <= molteplicita' <= %i",min_mult2,max_mult2);
   isto_res[2]=new TH1D(nome,titolo,500, -0.1, 0.1);
   
   for(int i=0;i<sizetrue;i++){
@@ -382,11 +383,11 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
  
   //istogrammi eventi ben ricostruiti per efficenza vs molteplicità 
   TH1D *isto_ok[2];
-  sprintf(nome,"isto_ok1sigma");
-  sprintf(titolo,"ok 1 sigma");
+  snprintf(nome, sizeof(nome), "isto_ok1sigma");
+  snprintf(titolo, sizeof(titolo), "ok 1 sigma");
   isto_ok[0]= new TH1D (nome,titolo,arraylenghtmulti,multibin);
-  sprintf(nome,"isto_ok3sigma");
-  sprintf(titolo,"ok 3 sigma");
+  snprintf(nome, sizeof(nome), "isto_ok3sigma");
+  snprintf(titolo, sizeof(titolo), "ok 3 sigma");
   isto_ok[1]= new TH1D (nome,titolo,arraylenghtmulti,multibin);
  
   for(int i=0;i<sizetrue;i++){
@@ -397,12 +398,12 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
   //istogrammi efficienza vs molteplicità
   TH1D * isto_eff[2];
   //z fra [-sigma;sigma]
-  sprintf(nome,"isto_eff1sigma");
-  sprintf(titolo,"efficienza 1 sigma");
+  snprintf(nome, sizeof(nome), "isto_eff1sigma");
+  snprintf(titolo, sizeof(titolo), "efficienza 1 sigma");
   isto_eff[0]=new TH1D(nome,titolo,arraylenghtmulti,multibin);
   //z fra [-3 sigma;3 sigma]
-  sprintf(nome,"isto_eff3sigma");
-  sprintf(titolo,"efficienza 3 sigma");
+  snprintf(nome, sizeof(nome), "isto_eff3sigma");
+  snprintf(titolo, sizeof(titolo), "efficienza 3 sigma");
   isto_eff[1]=new TH1D(nome,titolo,arraylenghtmulti,multibin);
   
   for(int i=1;i<arraylenghtmulti+1;i++){
@@ -429,11 +430,11 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
   //analogo per 3 sigma
   TH1D * isto_residui3[arraylenghtmulti];	
   for(int i=0;i<arraylenghtmulti;i++){	
-    sprintf(nome,"isto_residui1[%i]",i);
-    sprintf(titolo,"residui 1 sigma per %f<molteplicita'<%f", multibin[i],multibin[i+1]);
+    snprintf(nome, sizeof(nome), "isto_residui1[%i]",i);
+    snprintf(titolo, sizeof(titolo), "residui 1 sigma per %f<molteplicita'<%f", multibin[i],multibin[i+1]);
     isto_residui1[i]=new TH1D(nome,titolo,500, -0.1, 0.1);	 
-    sprintf(nome,"isto_residui3[%i]",i);
-    sprintf(titolo,"residui 3 sigma per %f<moteplicita'<%f", multibin[i],multibin[i+1]);
+    snprintf(nome, sizeof(nome), "isto_residui3[%i]",i);
+    snprintf(titolo, sizeof(titolo), "residui 3 sigma per %f<moteplicita'<%f", multibin[i],multibin[i+1]);
     isto_residui3[i]=new TH1D(nome,titolo,500, -0.1, 0.1);
   
     for(int j=0;j<sizetrue;j++){
@@ -445,12 +446,12 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
   //istogrammi risoluzione vs molteplicità 1 sigma e 3 sigma
   TH1D * isto_ris[2];
   //z fra [-sigma;sigma]
-  sprintf(nome,"isto_ris1sigma");
-  sprintf(titolo,"risoluzione 1 sigma");
+  snprintf(nome, sizeof(nome), "isto_ris1sigma");
+  snprintf(titolo, sizeof(titolo), "risoluzione 1 sigma");
   isto_ris[0]=new TH1D(nome,titolo,arraylenghtmulti,multibin);
   //z fra [-3 sigma;3 sigma]
-  sprintf(nome,"isto_ris3sigma");
-  sprintf(titolo,"risoluzione 3 sigma");
+  snprintf(nome, sizeof(nome), "isto_ris3sigma");
+  snprintf(titolo, sizeof(titolo), "risoluzione 3 sigma");
   isto_ris[1]=new TH1D(nome,titolo,arraylenghtmulti,multibin);
   
   for(int i=1;i<arraylenghtmulti+1;i++){
@@ -476,8 +477,8 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
 	
   //istogrammi eventi ben ricostruiti per efficenza vs ztrue 
   TH1D *isto_okztrue[1];
-  sprintf(nome,"isto_okztrue");
-  sprintf(titolo,"ok ztrue");
+  snprintf(nome, sizeof(nome), "isto_okztrue");
+  snprintf(titolo, sizeof(titolo), "ok ztrue");
   isto_okztrue[0]= new TH1D (nome,titolo,arraylenghtz,zbin);
  
 
@@ -487,8 +488,8 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
  
   //istogrammi efficienza vs ztrue
   TH1D * isto_effztrue[1];
-  sprintf(nome,"isto_effztrue");
-  sprintf(titolo,"efficienza vs ztrue ");
+  snprintf(nome, sizeof(nome), "isto_effztrue");
+  snprintf(titolo, sizeof(titolo), "efficienza vs ztrue ");
   isto_effztrue[0]=new TH1D(nome,titolo,arraylenghtz,zbin);
   
   for(int i=1;i<arraylenghtz+1;i++){
@@ -503,15 +504,15 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
     }
   }      
   
-  //istogramma per verificare distribuzione residui complessiva su tutti i ztrue
+  //Istogramma Per Verificare Distribuzione residui complessiva su tutti i ztrue
   TH1D * isto_ressomma=new TH1D("isto_ressomma","somma di istogrammi residui bin per bin di ztrue; z_rec-z_true [cm]; numero di eventi",500, -0.1, 0.1);
   
   //istogrammi residui bin per bin per risoluzione vs ztrue 
   TH1D * isto_residuiztrue[arraylenghtz];
   
   for (int i=0;i<arraylenghtz;i++){	
-    sprintf(nome,"isto_residuiztrue[%i]",i);
-    sprintf(titolo,"residui  per %f<ztrue <=%f",zbin[i],zbin[i+1]);
+    snprintf(nome, sizeof(nome), "isto_residuiztrue[%i]",i);
+    snprintf(titolo, sizeof(titolo), "residui  per %f<ztrue <=%f",zbin[i],zbin[i+1]);
     isto_residuiztrue[i]=new TH1D(nome,titolo,500, -0.1, 0.1);	 
     for(int j=0;j<sizetrue;j++){
       if (TMath::Abs(vztrue[j]-vzrec[j])<3*vzrecrms[j]&&vztrue[j]>zbin[i]&&vztrue[j]<=zbin[i+1]){isto_residuiztrue[i]->Fill(vzrec[j]-vztrue[j]);}
@@ -521,8 +522,8 @@ void plot(const vector <double>* const vztruep,const  vector <double>* const vzr
  
   //istogrammi risoluzione vs ztrue
   TH1D * isto_risztrue[1];
-  sprintf(nome,"isto_risztrue");
-  sprintf(titolo,"risoluzione vs ztrue ");
+  snprintf(nome, sizeof(nome), "isto_risztrue");
+  snprintf(titolo, sizeof(titolo), "risoluzione vs ztrue ");
   isto_risztrue[0]=new TH1D(nome,titolo,arraylenghtz,zbin);
  
   for(int i=1;i<arraylenghtz+1;i++){

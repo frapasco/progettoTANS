@@ -1,4 +1,4 @@
-void compilevertex (TString myopt="fast"){
+void Compileclass (TString myopt="fast"){
   TString opt;
   if(myopt.Contains("force")){opt="kfg";} else {opt ="kg"; }
   
@@ -9,5 +9,15 @@ void compilevertex (TString myopt="fast"){
   gSystem->CompileMacro("./src/Hit.cxx", opt.Data()); 
   gSystem->CompileMacro("./macros/simulation.cxx", opt.Data()); 
   gSystem->CompileMacro ("./macros/reconstruction.cxx", opt.Data()); 
-  //gSystem->CompileMacro ("./macros/canvasses.C", opt.Data()); 
+  //gSystem->CompileMacro ("./macros/canvasses.C", opt.Data());
+}
+
+void Clean(TString myopt="build"){
+  gSystem->Exec("rm -rf ./build");
+  if(myopt.Contains("all")){
+    gSystem->Exec("rm -rf ./data.txt");
+    gSystem->Exec("rm -rf ./simulazione.root");
+    gSystem->Exec("rm -rf ./ricostruzione.root");
+    gSystem->Exec("rm -rf ./istogrammi.root");
+  }
 }
