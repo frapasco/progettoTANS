@@ -18,7 +18,7 @@
 #include "Vertex.h"
 #include "Track.h"
 #include "Hit.h"
-//STOCAZZO
+
 using namespace std;
 const int kVerbosity=1; //verbosity
 const int kLimit1=17; //last bin to read for histograms for given multiplicity
