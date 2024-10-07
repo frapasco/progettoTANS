@@ -34,7 +34,7 @@ const bool kMs=true;//multiple scattering (true=ON)
 const int kVerbosity=1;//verbosity
 const unsigned int kSeed=18; //seed for TRandom3
 
-const TString kFile="simulazione.root";//output file
+const TString kFile="simulation.root";//output file
 
 ////////////////////////////////////////////////////////////////////
 

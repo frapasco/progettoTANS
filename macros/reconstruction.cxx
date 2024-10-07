@@ -28,10 +28,10 @@ const double kPhiMax=0.01; //max angle between points for creating tracklets (AA
 //sfasamento massimo fra due punti fra cui creare tracklet (valutato per eccesso fra punti di una stessa traccia da simulazione+ricostruzione indipendenti)
 const double kRange=0.1; //range, attorno al picco dell'istogramma delle intersezioni delle tracklet, entro cui mediare le intersezioni per ricostruire z del vertice
 
-const TString kSim="simulazione.root";//file da cui leggere eventi
-const TString kRic="ricostruzione.root";//file per salvare tree ricostruzione
-const TString kIsto="istogrammi.root";//file per salvare istogrammi
-const string kData="data.txt";//file da cui leggere caratteristiche run
+const TString kSim="simulation.root"; //input file
+const TString kRic="reconstruction.root"; //output file for reconstruction tree
+const TString kIsto="histo.root"; //output file for histograms
+const string kData="data.txt";  //config file for the run data
 
 ///////////////////////////////////////////////////////////////////
 //Funzione per rappresentare i risultati (residui, efficienza vs
