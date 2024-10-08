@@ -31,7 +31,7 @@ const double kEtamax=+2.;
 
 const TString kMul="sì"; //molteplicity options ("sì"=given distrib.; "No","NO","no"=uniform)
 const bool kMs=true;//multiple scattering (true=ON)
-const int kVerbosity=1;//verbosity
+const int kVerbositySimu=1;//verbosity
 const unsigned int kSeed=18; //seed for TRandom3
 
 const TString kFile="simulation.root";//output file
@@ -39,7 +39,7 @@ const TString kFile="simulation.root";//output file
 ////////////////////////////////////////////////////////////////////
 
 void simulation(){
-  if(kR1<=kRbp||kR2<=kR1||kRbp<=0||kEvents<=0||kEtamax<=kEtamin||kL<=0||kSigmaz<=0||kSigmax<=0||kSigmay<=0||kVerbosity<=0){
+  if(kR1<=kRbp||kR2<=kR1||kRbp<=0||kEvents<=0||kEtamax<=kEtamin||kL<=0||kSigmaz<=0||kSigmax<=0||kSigmay<=0||kVerbositySimu<=0){
     cout<<"Error in parameters setting"<<endl; 
     return;
   }
@@ -94,13 +94,13 @@ void simulation(){
     lost2=0;
     lostAll=0;
     
-    if (i%kVerbosity==0) cout <<"\n \n  EVENT  "<<i+1<<endl;	   
+    if (i%kVerbositySimu==0) cout <<"\n \n  EVENT  "<<i+1<<endl;	   
     vertex=new Vertex(kMul,fileName,multDistr,kSigmax,kSigmay,kSigmaz); //vertex creation
     
     //oooOOOoooOOOoooOOOoooOOOoooOOOooo
     //AAAAAAAAAA write a method that assignes the multiplicity via external loading of the TFILE
     nParticle=vertex->GetM(); 
-      if (i%kVerbosity==0) cout <<"vertex created"<<endl;
+      if (i%kVerbositySimu==0) cout <<"vertex created"<<endl;
       //loop on charged particles created  
       for (int j=0; j<nParticle; j++){  //loop on created particles
         vertex->InitialDir(kEtamin,kEtamax,fileName,etaDistr);//setting of initial direction
@@ -140,7 +140,7 @@ void simulation(){
 	delete tbp;			
       }
       
-      if (i%kVerbosity==0) cout<<"Hits done"<<endl; 
+      if (i%kVerbositySimu==0) cout<<"Hits done"<<endl; 
       
       //scoring hits
       tree->Fill(); 

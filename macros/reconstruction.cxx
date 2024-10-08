@@ -20,7 +20,7 @@
 #include "Hit.h"
 
 using namespace std;
-const int kVerbosity=1; //verbosity
+const int kVerbosityReco=1; //verbosity
 const int kLimit1=17; //last bin to read for histograms for given multiplicity
 const int kLimit2=21; //last bin to read for histograms for uniform multiplicity
 const double kNoisefrac=1.2; //ratio for noise/multiplicity points
@@ -38,14 +38,14 @@ const string kData="data.txt";  //config file for the run data
 //resolution vs multiplicity, efficiency vs zTrue, resolution vs zTrue)
 ////////////////////////////////////////////////////////////////////
 
-void plot(const vector <double>* const vzTruep,const  vector <double>* const vzgrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arraylenghtmulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arraylenghtz, TH1D *totz, const int sizetrue);
+void plot(const vector <double>* const vzTruep,const  vector <double>* const vzgrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue);
 
 ////////////////////////////////////////////////////////////////////
 //method for smearing points, generating noise and reconstruct the primary vertex out of tracklets
 ////////////////////////////////////////////////////////////////////
 
-void reconstruction()  
-  double step=0.05;//step histograms intersections with z
+void reconstruction(){
+  double step=0.05; //step histograms intersections with z
   double R1,R2,L,sigmaZ;
   int events;
   char a;
@@ -55,7 +55,7 @@ void reconstruction()
     cout<<"Error: the file doesn't exist"<<endl; 
     return;
   }
-  	
+  
   In>>R1>>R2>>L>>sigmaZ>>events>>a;
   In.close();
   TString mul;
@@ -65,21 +65,21 @@ void reconstruction()
   if(file==NULL){
     cout<<"Error: the file doesn't exist"<<endl; 
     return;
-  }	
-  file->ls();//lettura di contenuto file
+  }
+  file->ls(); //reading the content of file
   TTree *inputTree = (TTree*)file->Get("tree");
   if(inputTree==NULL){ 
     cout<<"Error: the Tree doesn't exist"<<endl; 
     return;
   }
-
+  
   //creating output file and Tree
   TFile *fileReco = TFile::Open(kRic,"RECREATE"); 
   TTree *treeReco = new TTree("treeReco", "reconstruction");
   treeReco->SetDirectory(fileReco);
-   
+  
   //histograms reconstruction primary vertex in z
-  if(step<=0||kVerbosity<=0||kNoisefrac<=0||kPhiMax<=0||kRange<=0){
+  if(step<=0||kVerbosityReco<=0||kNoisefrac<=0||kPhiMax<=0||kRange<=0){
     cout<<"Error in parameters setting"<<endl; 
     return;
   }
@@ -103,8 +103,8 @@ void reconstruction()
   //assignment of branches for the output tree
   treeReco->Branch("Vertexreal",&vertexRec); //primary vertex
   treeReco->Branch("zintersectionvector",&Zintersection); //vector di intersezioni Tracklet 
-  treeReco->Branch("int1enoise",&intersecPointDet1);//intersection + noise T1
-  treeReco->Branch("int2enoise",&intersecPointDet2);//intersection + noise T2
+  treeReco->Branch("int1enoise",&intersecPointDet1); //intersection + noise T1
+  treeReco->Branch("int2enoise",&intersecPointDet2); //intersection + noise T2
 
   //reading from input file TCloneArrays
   TClonesArray *clone1= new TClonesArray("Hit",100);
@@ -116,35 +116,35 @@ void reconstruction()
   
   Vertex *verlec = new Vertex(); //creation of a Vertex obj
   
-  tree->GetBranch("tclone1")->SetAutoDelete(kFALSE);
-  tree->SetBranchAddress("tclone1",&clone1);
+  inputTree->GetBranch("tclone1")->SetAutoDelete(kFALSE); //prevents TClonesArray from reusing space allocated by the previous obj, setted for redundancy since it is kFALSE by default
+  inputTree->SetBranchAddress("tclone1",&clone1);
      
-  tree->GetBranch("tclone2")->SetAutoDelete(kFALSE);
-  tree->SetBranchAddress("tclone2",&clone2);
+  inputTree->GetBranch("tclone2")->SetAutoDelete(kFALSE);
+  inputTree->SetBranchAddress("tclone2",&clone2);
  	
-  TBranch *b3=tree->GetBranch("Vertext");
+  TBranch *b3=inputTree->GetBranch("Vertext");
   b3->SetAddress(&verlec); //reading Vertex
 	
   clone1->Clear(); //cleaning clone1 e clone2
   clone2->Clear();
 
-  //histogram for efficiency(multiplicity) AAAAAAA e array limiti bin.
+  //histogram for efficiency (multiplicity)
   double multiBin[]={-0.5, 0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 9.5, 11.5, 14.5, 17.5, 20.5, 25.5, 30.5, 40.5, 50.5, 60.5, 70.5, 80.5, 90.5, 91.5};
-  int arraylenghtmulti= sizeof(multiBin)/sizeof(multiBin[0])-1; //number bin histo, deve essere 1 in meno di elementi di vettore per costruttore
-  int limit; //dice molteplicità massima isto con multiBin[limit]
-  if (kLimit1>kLimit2||kLimit2>arraylenghtmulti||kLimit1<=0||kLimit2<=0){
+  int arrayLenghtMulti= sizeof(multiBin)/sizeof(multiBin[0])-1; //nbins of histo
+  int limit; //maximum multuplicity for histo with multiBin[limit]
+  if (kLimit1>kLimit2||kLimit2>arrayLenghtMulti||kLimit1<=0||kLimit2<=0){
     cout<<"Error on kLimit1 and kLimit2"<<endl;
     return;
   }
-  if(mul=="No") limit=kLimit2; else limit=kLimit1; //ci fermiamo prima in molteplicità se non molteplicità uniforme
+  if(mul=="No") limit=kLimit2; else limit=kLimit1; //if not uniform multiwe stop before
   
-  TH1D *tot1multi = new TH1D("tot1multi","tot1multi",arraylenghtmulti,multiBin);//totale eventi con z simulato entro 1 sigma da 0 per efficenza in funzione di molteplicità
-  TH1D *tot3multi= new TH1D("tot3multi","tot3multi",arraylenghtmulti,multiBin);//entro 3 sigma
+  TH1D *tot1multi = new TH1D("tot1multi","tot1multi",arrayLenghtMulti,multiBin); //histo for events with z simu between 1 sigma from 0 in function of multiplicity
+  TH1D *tot3multi= new TH1D("tot3multi","tot3multi",arrayLenghtMulti,multiBin); //between 3 sigma
     
-  //analogo per efficenza(zTrue=z del vertice primario)	
+  //same for efficiency (zTrue=z of primary vertex)	
   double zbin[]={-16, -12, -9, -7, -5, -3, -1, 1, 3, 5, 7, 9, 12, 16};
-  int arraylenghtz= sizeof(zbin)/sizeof(zbin[0])-1;//numero bin isto, deve essere 1 in meno di elementi di vettore per costruttore	
-  TH1D *totz = new TH1D("totz","totz",arraylenghtz,zbin);//totale eventi per efficenza con zTrue
+  int arrayLenghtZ= sizeof(zbin)/sizeof(zbin[0])-1; //nbins
+  TH1D *totz = new TH1D("totz","totz",arrayLenghtZ,zbin);
 
   //vector per fare istogrammi finali
   vector <double> *vzTrue = new vector <double>; //z di vertice simulato
@@ -170,8 +170,8 @@ void reconstruction()
   int sizevec=0;//dimensioni vector allocati su heap
 	
   //loop sul numero di eventi (entrate di tree)
-  for(int ev=0;ev<tree->GetEntries();ev++){
-    if (ev%kVerbosity==0) cout <<"\n \n EVENTO  "<<ev+1<<endl;
+  for(int ev=0;ev<inputTree->GetEntries();ev++){
+    if (ev%kVerbosityReco==0) cout <<"\n \n EVENTO  "<<ev+1<<endl;
     Zintersection.clear();//pulizia vettore intersezioni
     Zintersection.reserve(200);
     out1=0;
@@ -180,12 +180,12 @@ void reconstruction()
     element2=0;	  
     delete vertexRec;//eliminazione vertexRec	  
     zIntersecHisto->Reset("ICES");//svuotamento istogramma da evento precedente
-    tree->GetEntry(ev);//lettura evento ev 
+    inputTree->GetEntry(ev);//lettura evento ev 
     nlines1 = clone1->GetEntriesFast();//numero eventi in clone1
     nlines2 = clone2->GetEntriesFast();//numero eventi in clone2
     vertexRec = new Vertex(*verlec);//copia di verlec in vertexRec
  	  
-    //lettura punti di intersezione da tree e aggiunta dello smearing
+    //lettura punti di intersezione da inputTree e aggiunta dello smearing
     //loop su tracce simulate 
     for(int i=0;i<nlines1;i++){    
       int t=i-out1; 
@@ -220,8 +220,8 @@ void reconstruction()
 	  element2++;	
       }else out2++;      
     }	
-    if(ev%kVerbosity==0)cout<<"Applicato smearing"<<endl;
-    if(ev%kVerbosity==0)cout<<"Hit usciti da T1: "<<out1<<"  Hit usciti da T2: "<<out2<<endl;
+    if(ev%kVerbosityReco==0)cout<<"Applicato smearing"<<endl;
+    if(ev%kVerbosityReco==0)cout<<"Hit usciti da T1: "<<out1<<"  Hit usciti da T2: "<<out2<<endl;
         
     //aggiunta del noise
     int Nnoise = (int) (verlec->GetM())*kNoisefrac;//numero di punti di noise, assunto identico per T1 e T2
@@ -231,7 +231,7 @@ void reconstruction()
     for(int k=element2;k<element2+Nnoise; k++){
       new (int2[k]) Hit(R2,L);
     }
-    if (ev%kVerbosity==0)cout<<"Applicato noise"<<endl;
+    if (ev%kVerbosityReco==0)cout<<"Applicato noise"<<endl;
        
     //inzio reconstruction PV
     int Nrec1=intersecPointDet1->GetEntriesFast();//numero di elementi (hit+noise) in int1 e int2
@@ -264,7 +264,7 @@ void reconstruction()
       }
     }//fine for sui due TClone di intersezioni per fare tracklet
       
-    if (ev%kVerbosity==0)cout<<"Create tracklet e riempito istogramma"<<endl;
+    if (ev%kVerbosityReco==0)cout<<"Create tracklet e riempito istogramma"<<endl;
     if (zIntersecHisto->GetEntries()!=0){//if per chiedere istogramma non vuoto
       int binmax= zIntersecHisto->GetMaximumBin(); //numero del bin col primo massimo dell'istogramma
       double zmax=(binmax-1)*step+zMin+step/2;//zMin è limite inferiore di range dell'ascissa di istogramma; centro di bin (in z) dove si ha primo massimo
@@ -288,7 +288,7 @@ void reconstruction()
 	  }
 	  if (denom>1) zrecrms=TMath::Sqrt(scarti/(denom-1)); //calcolo deviazione standard
 	  else {zrecrms=0.05;} //0.05 scelto come errore plausibile nel caso di una media calcolata su un singolo valore
-	  if (ev%kVerbosity==0) cout<<"zrec= "<<zrec<<" +- "<<zrecrms<<endl;
+	  if (ev%kVerbosityReco==0) cout<<"zrec= "<<zrec<<" +- "<<zrecrms<<endl;
 	  vzrec->push_back(zrec);//riempimento vector
 	  vzTrue->push_back(verlec->GetZ());	
 	  vzmulti->push_back(verlec->GetM());
@@ -297,7 +297,7 @@ void reconstruction()
       }//fine if denom>0
     }//fine richiesta istogramma non vuoto
    
-    if (ev%kVerbosity==0){new TCanvas; zIntersecHisto->DrawCopy();} 
+    if (ev%kVerbosityReco==0){new TCanvas; zIntersecHisto->DrawCopy();} 
     if(verlec->GetZ()<1*sigmaZ&&verlec->GetM()<multiBin[limit]) tot1multi->Fill(verlec->GetM());  
     if(verlec->GetZ()<3*sigmaZ&&verlec->GetM()<multiBin[limit]) tot3multi->Fill(verlec->GetM());    
     totz->Fill(verlec->GetZ());//riempimento istogrammi con eventi totali simulati (efficenza=buoni/totali)
@@ -313,7 +313,7 @@ void reconstruction()
   
   cout<<"\n \n Zintersection non trovata correttamente per "<< noTrack<<" Tracklet su "<<tottraccia<<" Trackelet costruite"<<endl; 
    
-  plot(vzTrue, vzrec,  vzmulti, vzrecrms, multiBin, arraylenghtmulti, tot1multi, tot3multi, limit, sigmaZ,zbin,  arraylenghtz, totz, sizevec);
+  plot(vzTrue, vzrec,  vzmulti, vzrecrms, multiBin, arrayLenghtMulti, tot1multi, tot3multi, limit, sigmaZ,zbin,  arrayLenghtZ, totz, sizevec);
   
   delete  vzTrue; //eliminazione vector
   delete  vzrec;
@@ -334,12 +334,12 @@ void reconstruction()
   file->Close();
   
   cout<<"reconstruction completata"<<endl;	
+}
 
 
 
-
-void plot(const vector <double>* const vzTruep,const  vector <double>* const vzrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arraylenghtmulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arraylenghtz, TH1D *totz, const int sizetrue){
-
+void plot(const vector <double>* const vzTruep,const  vector <double>* const vzrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue){
+  
   TFile *histo = TFile::Open(kHisto, "RECREATE");  //file per salvare istogrammi 
   const vector <double> &vzTrue = *vzTruep;
   const vector <double> &vzrec = *vzrecp;
@@ -381,10 +381,10 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   TH1D *isto_ok[2];
   snprintf(nome, sizeof(nome), "isto_ok1sigma");
   snprintf(titolo, sizeof(titolo), "ok 1 sigma");
-  isto_ok[0]= new TH1D (nome,titolo,arraylenghtmulti,multiBin);
+  isto_ok[0]= new TH1D (nome,titolo,arrayLenghtMulti,multiBin);
   snprintf(nome, sizeof(nome), "isto_ok3sigma");
   snprintf(titolo, sizeof(titolo), "ok 3 sigma");
-  isto_ok[1]= new TH1D (nome,titolo,arraylenghtmulti,multiBin);
+  isto_ok[1]= new TH1D (nome,titolo,arrayLenghtMulti,multiBin);
  
   for(int i=0;i<sizetrue;i++){
     if(TMath::Abs(vzTrue[i]-vzrec[i])<3*vzrecrms[i]&&vzTrue[i]<1*sigmaZ&&vzmulti[i]<multiBin[limit]) isto_ok[0]->Fill(vzmulti[i]);
@@ -396,13 +396,13 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   //z fra [-sigma;sigma]
   snprintf(nome, sizeof(nome), "isto_eff1sigma");
   snprintf(titolo, sizeof(titolo), "efficienza 1 sigma");
-  isto_eff[0]=new TH1D(nome,titolo,arraylenghtmulti,multiBin);
+  isto_eff[0]=new TH1D(nome,titolo,arrayLenghtMulti,multiBin);
   //z fra [-3 sigma;3 sigma]
   snprintf(nome, sizeof(nome), "isto_eff3sigma");
   snprintf(titolo, sizeof(titolo), "efficienza 3 sigma");
-  isto_eff[1]=new TH1D(nome,titolo,arraylenghtmulti,multiBin);
+  isto_eff[1]=new TH1D(nome,titolo,arrayLenghtMulti,multiBin);
   
-  for(int i=1;i<arraylenghtmulti+1;i++){
+  for(int i=1;i<arrayLenghtMulti+1;i++){
     double e;
     double error;
     if(tot1multi->GetBinContent(i)!=0){
@@ -422,10 +422,10 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   }
   
   //istogrammi residui bin per bin per risoluzione vs. molteplicità per zTrue entro 1 sigma da 0
-  TH1D * isto_residui1[arraylenghtmulti];
+  TH1D * isto_residui1[arrayLenghtMulti];
   //analogo per 3 sigma
-  TH1D * isto_residui3[arraylenghtmulti];	
-  for(int i=0;i<arraylenghtmulti;i++){	
+  TH1D * isto_residui3[arrayLenghtMulti];	
+  for(int i=0;i<arrayLenghtMulti;i++){	
     snprintf(nome, sizeof(nome), "isto_residui1[%i]",i);
     snprintf(titolo, sizeof(titolo), "residui 1 sigma per %f<molteplicita'<%f", multiBin[i],multiBin[i+1]);
     isto_residui1[i]=new TH1D(nome,titolo,500, -0.1, 0.1);	 
@@ -444,13 +444,13 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   //z fra [-sigma;sigma]
   snprintf(nome, sizeof(nome), "isto_ris1sigma");
   snprintf(titolo, sizeof(titolo), "risoluzione 1 sigma");
-  isto_ris[0]=new TH1D(nome,titolo,arraylenghtmulti,multiBin);
+  isto_ris[0]=new TH1D(nome,titolo,arrayLenghtMulti,multiBin);
   //z fra [-3 sigma;3 sigma]
   snprintf(nome, sizeof(nome), "isto_ris3sigma");
   snprintf(titolo, sizeof(titolo), "risoluzione 3 sigma");
-  isto_ris[1]=new TH1D(nome,titolo,arraylenghtmulti,multiBin);
+  isto_ris[1]=new TH1D(nome,titolo,arrayLenghtMulti,multiBin);
   
-  for(int i=1;i<arraylenghtmulti+1;i++){
+  for(int i=1;i<arrayLenghtMulti+1;i++){
     double RMS;//risoluzione è RMS istogrammi residui bin per bin
     double error;
     if(isto_residui1[i-1]->GetRMS()!=0){
@@ -475,7 +475,7 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   TH1D *isto_okzTrue[1];
   snprintf(nome, sizeof(nome), "isto_okzTrue");
   snprintf(titolo, sizeof(titolo), "ok zTrue");
-  isto_okzTrue[0]= new TH1D (nome,titolo,arraylenghtz,zbin);
+  isto_okzTrue[0]= new TH1D (nome,titolo,arrayLenghtZ,zbin);
  
 
   for(int i=0;i<sizetrue;i++){
@@ -486,9 +486,9 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   TH1D * isto_effzTrue[1];
   snprintf(nome, sizeof(nome), "isto_effzTrue");
   snprintf(titolo, sizeof(titolo), "efficienza vs zTrue ");
-  isto_effzTrue[0]=new TH1D(nome,titolo,arraylenghtz,zbin);
+  isto_effzTrue[0]=new TH1D(nome,titolo,arrayLenghtZ,zbin);
   
-  for(int i=1;i<arraylenghtz+1;i++){
+  for(int i=1;i<arrayLenghtZ+1;i++){
     double e;
     double error;
     if(totz->GetBinContent(i)!=0){
@@ -504,9 +504,9 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   TH1D * isto_ressomma=new TH1D("isto_ressomma","somma di istogrammi residui bin per bin di zTrue; z_rec-z_true [cm]; numero di eventi",500, -0.1, 0.1);
   
   //istogrammi residui bin per bin per risoluzione vs zTrue 
-  TH1D * isto_residuizTrue[arraylenghtz];
+  TH1D * isto_residuizTrue[arrayLenghtZ];
   
-  for (int i=0;i<arraylenghtz;i++){	
+  for (int i=0;i<arrayLenghtZ;i++){	
     snprintf(nome, sizeof(nome), "isto_residuizTrue[%i]",i);
     snprintf(titolo, sizeof(titolo), "residui  per %f<zTrue <=%f",zbin[i],zbin[i+1]);
     isto_residuizTrue[i]=new TH1D(nome,titolo,500, -0.1, 0.1);	 
@@ -520,9 +520,9 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzr
   TH1D * isto_riszTrue[1];
   snprintf(nome, sizeof(nome), "isto_riszTrue");
   snprintf(titolo, sizeof(titolo), "risoluzione vs zTrue ");
-  isto_riszTrue[0]=new TH1D(nome,titolo,arraylenghtz,zbin);
+  isto_riszTrue[0]=new TH1D(nome,titolo,arrayLenghtZ,zbin);
  
-  for(int i=1;i<arraylenghtz+1;i++){
+  for(int i=1;i<arrayLenghtZ+1;i++){
     double RMS;
     double error;
     if(isto_residuizTrue[i-1]->GetRMS()!=0){
