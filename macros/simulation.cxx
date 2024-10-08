@@ -94,7 +94,7 @@ void simulation(){
     lost2=0;
     lostAll=0;
     
-    if (i%kVerbosity==0) cout <<"\n \n  EVENTO  "<<i+1<<endl;	   
+    if (i%kVerbosity==0) cout <<"\n \n  EVENT  "<<i+1<<endl;	   
     vertex=new Vertex(kMul,fileName,multDistr,kSigmax,kSigmay,kSigmaz); //vertex creation
     
     //oooOOOoooOOOoooOOOoooOOOoooOOOooo
@@ -140,24 +140,24 @@ void simulation(){
 	delete tbp;			
       }
       
-      if (i%kVerbosity==0) cout<<"Valutati hit"<<endl; 
+      if (i%kVerbosity==0) cout<<"Hits done"<<endl; 
       
-      //riempimento Tree
+      //scoring hits
       tree->Fill(); 
       if (lostAll==nParticle) vertexNoHit++; 
-      clone1->Clear(); //pulizia TClone per evento successivo
+      clone1->Clear(); //clearing TClones for next iteration
       clone2->Clear(); 
       bp->Clear();
-      delete vertex;//eliminazione Vertex per evento dopo
+      delete vertex; //deleting the Vertex
   }
   cout<<endl;
-  cout<<"Su "<<kEvents<<" vertici generati, "<<vertexNoHit<<" non hanno lasciato hit in nessuno dei due tracker"<<endl;	
-  hfile->cd(); //selezione di hfile come directory
-  tree->Write();//scrittura TTree
+  cout<<"Out of "<<kEvents<<" vertexes generated, "<<vertexNoHit<<" didn't interact with any of the detectors"<<endl;	
+  hfile->cd();
+  tree->Write(); //writing on the output file
   delete bp;
   delete clone1;
   delete clone2;
-  hfile->Close();//chiusura file
+  hfile->Close();
   
-  cout<<"Simulazione completata"<<endl;
+  cout<<"Simulation completed"<<endl;
 }
