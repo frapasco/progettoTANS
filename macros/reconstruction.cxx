@@ -110,8 +110,8 @@ void reconstruction(){
   TClonesArray *clone1= new TClonesArray("Hit",100);
   TClonesArray *clone2= new TClonesArray("Hit",100);
   for (int i=0;i<10;i++){ 
-    new ((*clone1)[i]) Hit (); 
-    new ((*clone2)[i]) Hit ();
+    new ((*clone1)[i]) Hit(); 
+    new ((*clone2)[i]) Hit();
   } //in order to having a non zero dimension obj
   
   Vertex *verlec = new Vertex(); //creation of a Vertex obj
@@ -136,7 +136,7 @@ void reconstruction(){
     cout<<"Error on kLimit1 and kLimit2"<<endl;
     return;
   }
-  if(mul=="No") limit=kLimit2; else limit=kLimit1; //if not uniform multiwe stop before
+  if(mul=="No") limit=kLimit2; else limit=kLimit1; //if not uniform multi we stop before
   
   TH1D *tot1multi = new TH1D("tot1multi","tot1multi",arrayLenghtMulti,multiBin); //histo for events with z simu between 1 sigma from 0 in function of multiplicity
   TH1D *tot3multi= new TH1D("tot3multi","tot3multi",arrayLenghtMulti,multiBin); //between 3 sigma
@@ -146,17 +146,17 @@ void reconstruction(){
   int arrayLenghtZ= sizeof(zbin)/sizeof(zbin[0])-1; //nbins
   TH1D *totz = new TH1D("totz","totz",arrayLenghtZ,zbin);
 
-  //vector per fare istogrammi finali
-  vector <double> *vzTrue = new vector <double>; //z di vertice simulato
-  vector <double> *vzrec = new vector <double>;	//z ricostruito
-  vector <int> *vzmulti = new vector <int>;	//molteplicità (da simulazione)
-  vector <double> *vzrecrms = new vector <double>; //errore (RMS) su z ricostruito	
-  vzTrue->reserve(events);//allocazione di memoria adeguata a evitare frammentazioni di memoria
+  //final histograms ingredients
+  vector <double> *vzTrue = new vector <double>; //z of the simulated vertex
+  vector <double> *vzrec = new vector <double>; //z reconstructed
+  vector <int> *vzmulti = new vector <int>; //multiplicity (from the simulation)
+  vector <double> *vzrecrms = new vector <double>; //error (RMS) on z reconstructed	
+  vzTrue->reserve(events); //allocation of memory to avoid memory fragmentation
   vzrec->reserve(events);
   vzmulti->reserve(events);
   vzrecrms->reserve(events);
  
-  //variabili utili	
+  //variables
   int nlines1, nlines2;
   int out1;//contatori per Hit fuori da T1 o T2  dopo smearing
   int out2; 

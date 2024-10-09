@@ -68,11 +68,11 @@ int Hit::GetLabel() const{
 } 
 
 //______________________________________________________________________________________________
-//smearing function
+//smearing function that implements Box-Muller
 void Hit::Smearing(double R, double sigz, double sigt){
   if (sigz<=0||sigt<=0) {std::cout<<"Error: set the parameters"<<std::endl; return;}
-  double sz = sigz; //cm. Std dev ricostruzione in zz reco
-  double st = sigt; //cm. Std dev transverse reco (R*phi)
+  double sz = sigz; //cm. Std dev reconstruction in zz reco
+  double st = sigt; //cm. Std dev transverse reco< (R*phi)
    
   double zrec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*sz; //z smearing 
   double arec=Sqrt(-2*Log(gRandom->Rndm()))*Cos(2*Pi()*gRandom->Rndm())*st; //transverse smearing
