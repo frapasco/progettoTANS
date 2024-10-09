@@ -158,28 +158,30 @@ void reconstruction(){
  
   //variables
   int nlines1, nlines2;
-  int out1;//contatori per Hit fuori da T1 o T2  dopo smearing
+  int out1; //counters for hits outside T1 and T2 after smeaaring
   int out2; 
-  int noTrack=0; //numero di tracklet per cui non si trova intersezione sensata
-  int tottraccia=0;//totale tracklet generate
+  int noTrack=0; //number of tracklets without a good candidate for intersection
+  int tottraccia=0;//total numer of tracklets generated
   double x1,y1,z1,x2,y2,z2; 
-  double Z; //z di intersezione tracklet - piano x=0
-  int element1, element2; //numero elementi in int1 e int 2 (senza noise)
-  double zrec, zrecrms;//z ricostruita e suo errore
-  double zmax;//z a cui si trova il primo massimo dell'istogramma delle intersezioni delle tracklet
-  int sizevec=0;//dimensioni vector allocati su heap
+  double Z; //z of intersection between tracklets (x=0 plane)
+  int element1, element2; //number of elements in int1 and int2 (without noise)
+  double zrec, zrecrms; //z reco and his uncertainty
+  double zmax; //z of the first max between tracklets
+  int sizevec=0; //size of the vectors on heap
 	
-  //loop sul numero di eventi (entrate di tree)
+  //loop on the number of events (inputTree entries)
   for(int ev=0;ev<inputTree->GetEntries();ev++){
-    if (ev%kVerbosityReco==0) cout <<"\n \n EVENTO  "<<ev+1<<endl;
-    Zintersection.clear();//pulizia vettore intersezioni
+    if (ev%kVerbosityReco==0) cout <<"\n \n EVENT  "<<ev+1<<endl;
+
+    //preliminary steps
+    Zintersection.clear();
     Zintersection.reserve(200);
     out1=0;
     out2=0;
     element1=0;
     element2=0;	  
-    delete vertexRec;//eliminazione vertexRec	  
-    zIntersecHisto->Reset("ICES");//svuotamento istogramma da evento precedente
+    delete vertexRec;
+    zIntersecHisto->Reset("ICES");
     inputTree->GetEntry(ev);//lettura evento ev 
     nlines1 = clone1->GetEntriesFast();//numero eventi in clone1
     nlines2 = clone2->GetEntriesFast();//numero eventi in clone2
