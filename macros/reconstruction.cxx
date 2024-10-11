@@ -59,7 +59,7 @@ void reconstruction(){
   In>>R1>>R2>>L>>sigmaZ>>events>>a;
   In.close();
   TString mul;
-  if (a=='N') mul="No"; else mul="sì";
+  if (a=='N') mul="No"; else mul="yes";
   
   TFile *file = TFile::Open(kSim, "READ");
   if(file==NULL){
@@ -181,23 +181,22 @@ void reconstruction(){
     element1=0;
     element2=0;	  
     delete vertexRec;
-    zIntersecHisto->Reset("ICES");
-    inputTree->GetEntry(ev);//lettura evento ev 
-    nlines1 = clone1->GetEntriesFast();//numero eventi in clone1
-    nlines2 = clone2->GetEntriesFast();//numero eventi in clone2
-    vertexRec = new Vertex(*verlec);//copia di verlec in vertexRec
- 	  
-    //lettura punti di intersezione da inputTree e aggiunta dello smearing
-    //loop su tracce simulate 
+    zIntersecHisto->Reset("ICES"); //AAAAAAA why just ICES?
+    inputTree->GetEntry(ev); //getting event
+    nlines1 = clone1->GetEntriesFast(); //number of events in clone1
+    nlines2 = clone2->GetEntriesFast(); //number of events in clone2
+    vertexRec = new Vertex(*verlec); //clone of verlec in vertexRec
+
+    //reading of intersection points from inputTree and smearing of them
+    //loop on simulated tracks
     for(int i=0;i<nlines1;i++){    
-      int t=i-out1; 
+      int t=i-out1;
       
-      //estrazione di un' intersezione per volta da T1 
+      //T1 hit processing
       Hit *i1 = (Hit*) clone1->At(i); 
       i1->Smearing(R1);
-           		
-      //riempimento treeReco int 1 con le coordinate con smearing 
-      if(TMath::Abs(i1->GetZ())<L/2){ //il punto rimane dentro T1
+
+      if(TMath::Abs(i1->GetZ())<L/2){ //check that after smearing the hit point still lies in T1
         x1=i1->GetX();
         y1=i1->GetY() ;
         z1=i1->GetZ();	 
@@ -208,13 +207,11 @@ void reconstruction(){
     for(int i=0;i<nlines2;i++){   
       int k=i-out2;  
      
-      //estrazione di un'intersezione per volta da T2
-      
+      //T2 hit porcessing      
       Hit *i2 = (Hit*) clone2->At(i); 
       i2->Smearing(R2);
      		
-      //riempimento treeReco int 2 con le coordinate con smearing     
-      if(TMath::Abs(i2->GetZ())<L/2){//il punto rimane dentro T2
+      if(TMath::Abs(i2->GetZ())<L/2){ //check that after smearing the hit point still lies in T2
      	  x2=i2->GetX();
         y2=i2->GetY() ;
         z2=i2->GetZ();	 
@@ -222,29 +219,29 @@ void reconstruction(){
 	  element2++;	
       }else out2++;      
     }	
-    if(ev%kVerbosityReco==0)cout<<"Applicato smearing"<<endl;
-    if(ev%kVerbosityReco==0)cout<<"Hit usciti da T1: "<<out1<<"  Hit usciti da T2: "<<out2<<endl;
+    if(ev%kVerbosityReco==0)cout<<"smearing of hits done"<<endl;
+    if(ev%kVerbosityReco==0)cout<<"Hit outside T1: "<<out1<<"  Hit outside T2: "<<out2<<endl;
         
-    //aggiunta del noise
-    int Nnoise = (int) (verlec->GetM())*kNoisefrac;//numero di punti di noise, assunto identico per T1 e T2
+    //adding noise
+    int Nnoise = (int) (verlec->GetM())*kNoisefrac; //assuming the number of hits due to noise is equal on both detectors #T1 = #T2
     for(int j=element1;j<element1+Nnoise;j++){
       new (int1[j]) Hit(R1,L);
     } 
     for(int k=element2;k<element2+Nnoise; k++){
       new (int2[k]) Hit(R2,L);
     }
-    if (ev%kVerbosityReco==0)cout<<"Applicato noise"<<endl;
+    if (ev%kVerbosityReco==0)cout<<"noise done"<<endl;
        
-    //inzio reconstruction PV
-    int Nrec1=intersecPointDet1->GetEntriesFast();//numero di elementi (hit+noise) in int1 e int2
+    //reconstruction of PV
+    int Nrec1=intersecPointDet1->GetEntriesFast(); //is the sum of (hit+noise) in int1 and int2
     int Nrec2=intersecPointDet2->GetEntriesFast();
       
-    int ntraccia=0; //contatore tracklet fatte per un vertice   
+    int ntraccia=0; //tracklets counter for a single vertex
     for(int i=0; i<Nrec1; i++){
       for(int j=0; j<Nrec2; j++){
         Hit *i1=(Hit*) intersecPointDet1->At(i); 
         Hit *i2=(Hit*) intersecPointDet2->At(j);
-        if(TMath::Abs(i2->GetPhi()-i1->GetPhi())<kPhiMax){//Creazione Tracklet Per Punti Compatibili Entro phimax
+        if(TMath::Abs(i2->GetPhi()-i1->GetPhi())<kPhiMax){ //Creation of Tracklet for points in phimax range
           x1=i1->GetX();
           x2=i2->GetX();
           y1=i1->GetY();
@@ -254,22 +251,22 @@ void reconstruction(){
           Track *t = new Track(x2-x1,y2-y1,z2-z1); 
           ntraccia++; 
           tottraccia++;
-	    Z=200000000;  //per controllo di funzionamento funzione intersezione
-	    t->Intersection2(x2,y2,z2,Z); // aggiorna Z con intersezione tracklet - piano x=0
-          if(Z>-10000000&&Z<10000000){//si riempie vettore e istogramma con intersezioni riuscite
-	      zIntersecHisto->Fill(Z);
-		Zintersection.push_back(Z);
-	    }
-	    else noTrack++;   
-	    delete t;
-        }//fine if su phi1-phi2<kPhiMax
+	  Z=200000000;  //initialized far outside the expected region in order to check the method
+	  t->Intersection2(x2,y2,z2,Z); //Z update with intersection of tracklets and x=0 plane
+	  if(Z>-10000000 && Z<10000000){ //condition for the intersection method to have worked
+	    zIntersecHisto->Fill(Z);
+	    Zintersection.push_back(Z);
+	  }
+	  else noTrack++;   
+	  delete t;
+        }
       }
-    }//fine for sui due TClone di intersezioni per fare tracklet
+    }
       
-    if (ev%kVerbosityReco==0)cout<<"Create tracklet e riempito istogramma"<<endl;
-    if (zIntersecHisto->GetEntries()!=0){//if per chiedere istogramma non vuoto
-      int binmax= zIntersecHisto->GetMaximumBin(); //numero del bin col primo massimo dell'istogramma
-      double zmax=(binmax-1)*step+zMin+step/2;//zMin è limite inferiore di range dell'ascissa di istogramma; centro di bin (in z) dove si ha primo massimo
+    if(ev%kVerbosityReco==0) cout<<"the tracklets are generated and the histo is filled"<<endl;
+    if(zIntersecHisto->GetEntries()!=0){ //check that the histo is not empty
+      int binmax= zIntersecHisto->GetMaximumBin(); //bin of the first max of histo
+      double zmax=(binmax-1)*step+zMin+step/2; //zMin è limite inferiore di range dell'ascissa di istogramma; centro di bin (in z) dove si ha primo massimo
       
       //calcolo zrec come media dei valori di intersezione (aggiunti precedentemente in vector) in un range attorno a zmax
       double sum=0.;

@@ -121,8 +121,7 @@ void Vertex :: InitialDir(double min, double max, TString fileName, TString etaD
     double o=max; 
     max=min; 
     min=o;
-  }
-  if(max==min){
+  }else if(max==min){
     cout<<"Error: etaMax=etaMin"<<endl; 
     return;
   }

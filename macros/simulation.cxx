@@ -25,11 +25,11 @@ const double kSigmax=0.01; //Gaussian spread (sigma) of the vertex around (0,0,0
 const double kSigmay=0.01;
 const double kSigmaz=5.3;
 
-const int kEvents=20; //number of primary vertexes
+const int kEvents=100000; //number of primary vertexes
 const double kEtamin=-2.;//boundaries for the eta distribution histo for generating tracks
 const double kEtamax=+2.;
 
-const TString kMul="sì"; //molteplicity options ("sì"=given distrib.; "No","NO","no"=uniform)
+const TString kMul="yes"; //molteplicity options ("yes"=given distrib.; "No","NO","no"=uniform)
 const bool kMs=true;//multiple scattering (true=ON)
 const int kVerbositySimu=1;//verbosity
 const unsigned int kSeed=18; //seed for TRandom3
