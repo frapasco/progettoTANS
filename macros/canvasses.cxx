@@ -9,8 +9,8 @@
 
 void SetmyIsto(TH1D *isto, int mstyle, int mcolor, int lcolor, TString tit, TString xa, TString ya, double xm, double xM, double ym, double yM);
 
-void canvasses(){
-  TFile *hfile = TFile::Open("istogrammi.root", "READ"); //apertura e verifica esistenza file
+void Canvasses(){
+  TFile *hfile = TFile::Open("histo.root", "READ"); //apertura e verifica esistenza file
   if(hfile==NULL){
     cout<<"Errore, non esiste il file"<<endl; 
     return;
@@ -19,8 +19,8 @@ void canvasses(){
   gStyle->SetOptFit(1111);//opzioni inserimento informazioni fit in grafici
  
       
- 
-  TH1D  * restot = (TH1D*)hfile->Get("isto_restot"); //estrazione istogramma e verifica sua esistenza
+  std::cout<<"stocazzo"<<std::endl; 
+  TH1D  * restot = (TH1D*)hfile->Get("histo_restot"); //estrazione istogramma e verifica sua esistenza
   if(restot==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -56,7 +56,7 @@ void canvasses(){
     
  
  
-  TH1D  * eff1m = (TH1D*)hfile->Get("isto_eff1sigma"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * eff1m = (TH1D*)hfile->Get("histo_eff1sigma"); //estrazione istogramma e verifica sua esistenza
   if(eff1m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -67,7 +67,7 @@ void canvasses(){
   
  
  
-  TH1D  * eff3m = (TH1D*)hfile->Get("isto_eff3sigma"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * eff3m = (TH1D*)hfile->Get("histo_eff3sigma"); //estrazione istogramma e verifica sua esistenza
   if(eff3m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -80,7 +80,7 @@ void canvasses(){
  
   //un paio di istogrammi di residui bin per bin per vedere se il programma ha funzionato correttamente
 
-  TH1D  * res1m = (TH1D*)hfile->Get("isto_residui1[5]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res1m = (TH1D*)hfile->Get("histo_residui1[5]"); //estrazione istogramma e verifica sua esistenza
   if(res1m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -91,7 +91,7 @@ void canvasses(){
  
  
 
-  TH1D  * res2m = (TH1D*)hfile->Get("isto_residui1[13]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res2m = (TH1D*)hfile->Get("histo_residui1[13]"); //estrazione istogramma e verifica sua esistenza
   if(res2m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -102,7 +102,7 @@ void canvasses(){
   
   
   
-  TH1D  * res3m = (TH1D*)hfile->Get("isto_residui3[5]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res3m = (TH1D*)hfile->Get("histo_residui3[5]"); //estrazione istogramma e verifica sua esistenza
   if(res3m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -113,7 +113,7 @@ void canvasses(){
     
   
  
-  TH1D  * res4m = (TH1D*)hfile->Get("isto_residui1[13]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res4m = (TH1D*)hfile->Get("histo_residui1[13]"); //estrazione istogramma e verifica sua esistenza
   if(res4m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -124,7 +124,7 @@ void canvasses(){
      
  
  
-  TH1D  * risol1m = (TH1D*)hfile->Get("isto_ris1sigma"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * risol1m = (TH1D*)hfile->Get("histo_ris1sigma"); //estrazione istogramma e verifica sua esistenza
   if(risol1m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -135,7 +135,7 @@ void canvasses(){
  
     
  
-  TH1D  * risol3m = (TH1D*)hfile->Get("isto_ris3sigma"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * risol3m = (TH1D*)hfile->Get("histo_ris3sigma"); //estrazione istogramma e verifica sua esistenza
   if(risol3m==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -150,7 +150,7 @@ void canvasses(){
  
  
  
-  TH1D  * eff1z = (TH1D*)hfile->Get("isto_effztrue"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * eff1z = (TH1D*)hfile->Get("histo_effztrue"); //estrazione istogramma e verifica sua esistenza
   if(eff1z==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -163,7 +163,7 @@ void canvasses(){
  
   //un paio di istogrammi residui bin per bin per vadere se sono "sensati"
 
-  TH1D  * res1z = (TH1D*)hfile->Get("isto_residuiztrue[2]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res1z = (TH1D*)hfile->Get("histo_residuiztrue[2]"); //estrazione istogramma e verifica sua esistenza
   if(res1z==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -174,7 +174,7 @@ void canvasses(){
  
    
   
-  TH1D  * res2z = (TH1D*)hfile->Get("isto_residuiztrue[6]"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * res2z = (TH1D*)hfile->Get("histo_residuiztrue[6]"); //estrazione istogramma e verifica sua esistenza
   if(res2z==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;
@@ -185,7 +185,7 @@ void canvasses(){
  
  
  
-  TH1D  * risol1z = (TH1D*)hfile->Get("isto_risztrue"); //estrazione istogramma e verifica sua esistenza
+  TH1D  * risol1z = (TH1D*)hfile->Get("histo_risztrue"); //estrazione istogramma e verifica sua esistenza
   if(risol1z==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 
     return;

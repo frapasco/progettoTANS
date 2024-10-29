@@ -20,7 +20,7 @@
 #include "Hit.h"
 
 using namespace std;
-const int kVerbosityReco=1; //verbosity
+const int kVerbosityReco=10000000; //verbosity
 const int kLimit1=17; //last bin to read for histograms for given multiplicity
 const int kLimit2=21; //last bin to read for histograms for uniform multiplicity
 const double kNoisefrac=1.2; //ratio for noise/multiplicity points

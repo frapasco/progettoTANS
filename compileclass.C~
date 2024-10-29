@@ -18,6 +18,6 @@ void Clean(TString myopt="build"){
     gSystem->Exec("rm -rf ./data.txt");
     gSystem->Exec("rm -rf ./simulation.root");
     gSystem->Exec("rm -rf ./reconstruction.root");
-    gSystem->Exec("rm -rf ./histo.root");
+    gSystem->Exec("rm -rf ./istogrammi.root");
   }
 }
