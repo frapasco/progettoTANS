@@ -18,8 +18,6 @@ void Canvasses(){
   hfile->ls();  //lettura contenuto file
   gStyle->SetOptFit(1111);//opzioni inserimento informazioni fit in grafici
  
-      
-  std::cout<<"stocazzo"<<std::endl; 
   TH1D  * restot = (TH1D*)hfile->Get("histo_restot"); //estrazione istogramma e verifica sua esistenza
   if(restot==NULL){ 
     cout<<"Errore, non esiste l'istogramma"<<endl; 

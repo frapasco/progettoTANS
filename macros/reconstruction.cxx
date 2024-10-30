@@ -52,7 +52,7 @@ void reconstruction(){
   //reading data.txt to get L, R1, R2, sigmaZ, events and multiplicity generation choice	
   ifstream In = ifstream(kData);
   if(!In.is_open()){
-    cout<<"Error: the file doesn't exist"<<endl; 
+    cout<<"Error: the file data doesn't exist"<<endl; 
     return;
   }
   
@@ -60,9 +60,8 @@ void reconstruction(){
   In.close();
   TString mul;
   if (a=='N') mul="No"; else mul="yes";
-  
   TFile *file = TFile::Open(kSim, "READ");
-  if(file==NULL){
+  if(!file || file->IsZombie()){
     cout<<"Error: the file doesn't exist"<<endl; 
     return;
   }
@@ -72,18 +71,15 @@ void reconstruction(){
      cout<<"Error: the Tree doesn't exist"<<endl; 
      return;
    }
-
    //creating output file and Tree
-   TFile *fileReco = TFile::Open(kRic,"RECREATE"); 
+   TFile *fileReco = TFile::Open(kRic,"RECREATE");
    TTree *treeReco = new TTree("treeReco", "reconstruction");
    treeReco->SetDirectory(fileReco);
-
    //histograms reconstruction primary vertex in z
    if(step<=0||kVerbosityReco<=0||kNoisefrac<=0||kPhiMax<=0||kRange<=0){
      cout<<"Error in parameters setting"<<endl; 
      return;
    }
-
    double zExtr=R2*(L/(R2-R1))-(L/2); //maximum z obtainable from tracklets, from the edges of the detectors
    double zMin=-zExtr-step/2;
    double zMaxBin=zExtr+step/2;	
@@ -99,13 +95,11 @@ void reconstruction(){
 
    Vertex *vertexRec = NULL; //creation of pointer to a Vertex obj
    vector<double> Zintersection; //vector for intersections of tracklets for a single vertex
-
    //assignment of branches for the output tree
    treeReco->Branch("Vertexreal",&vertexRec); //primary vertex
    treeReco->Branch("zintersectionvector",&Zintersection); //vector of Tracklet intersections 
    treeReco->Branch("int1enoise",&intersecPointDet1); //intersection + noise T1
    treeReco->Branch("int2enoise",&intersecPointDet2); //intersection + noise T2
-
    //reading from input file TCloneArrays
    TClonesArray *clone1= new TClonesArray("Hit",100);
    TClonesArray *clone2= new TClonesArray("Hit",100);
@@ -115,16 +109,12 @@ void reconstruction(){
    } //in order to having a non zero dimension obj
 
    Vertex *verlec = new Vertex(); //creation of a Vertex obj
-
    inputTree->GetBranch("tclone1")->SetAutoDelete(kFALSE); //prevents TClonesArray from reusing space allocated by the previous obj, setted for redundancy since it is kFALSE by default
    inputTree->SetBranchAddress("tclone1",&clone1);
-
    inputTree->GetBranch("tclone2")->SetAutoDelete(kFALSE);
    inputTree->SetBranchAddress("tclone2",&clone2);
-
-   TBranch *b3=inputTree->GetBranch("Vertext");
+   TBranch *b3=inputTree->GetBranch("Vertex");
    b3->SetAddress(&verlec); //reading Vertex
-
    clone1->Clear(); //cleaning clone1 e clone2
    clone2->Clear();
 

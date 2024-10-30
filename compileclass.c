@@ -7,7 +7,7 @@ void Compileclass (TString myopt="fast"){
   gSystem->CompileMacro("./src/Vertex.cxx", opt.Data());
   gSystem->CompileMacro("./src/Track.cxx", opt.Data()); 
   gSystem->CompileMacro("./src/Hit.cxx", opt.Data()); 
-  gSystem->CompileMacro("./macros/simulation.cxx", opt.Data()); 
+  gSystem->CompileMacro("./macros/simulationen.cxx", opt.Data()); 
   gSystem->CompileMacro ("./macros/reconstruction.cxx", opt.Data()); 
   gSystem->CompileMacro ("./macros/canvasses.cxx", opt.Data());
 }
