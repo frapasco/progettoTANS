@@ -4,6 +4,8 @@
 #include "TTree.h"
 #include "TRandom3.h"
 #include "TClonesArray.h"
+#include "TStopwatch.h"
+
 #include "Track.h"
 #include "Hit.h"
 #include "Vertex.h"
@@ -15,40 +17,53 @@ const double kRbp = 3.04;       // Beam pipe radius (half width)
 const double kR1 = 4.01;        // Radius of first detector (T1) (half width)
 const double kR2 = 7.01;        // Radius of second detector (T2) (half width)
 const double kL = 27;           // Detector length
+
 const double kSigmax = 0.01;    // Gaussian spread (sigma) of the vertex around (0,0,0)
 const double kSigmay = 0.01;
 const double kSigmaz = 5.3;
-const int kEvents = 100000;       // Number of primary vertices
+
+const int kEvents = 1000000;       // Number of primary vertices
 const double kEtamin = -2.;     // Boundaries for eta distribution for track generation
 const double kEtamax = +2.;
+
 const TString kMul = "yes";     // Multiplicity option ("yes" = custom distribution, "no" = uniform)
 const bool kMs = true;          // Multiple scattering enabled (true = ON)
-const int kVerbositySimu = 1;   // Verbosity level
+const int kVerbositySimu = 10000000;   // Verbosity level - every how many events ti gives a printout
 const unsigned int kSeed = 18;  // Random seed
-const TString kFile = "simulation.root";  // Output file name
+const TString kFile = "simulation.root";  // Output file
+
+//oooOOOoooOOOoooOOOoooOOOoooOOOoooOOOoooOOOoooOOOoooOOOoooOOOooo
 
 void simulation() {
+  TStopwatch clock;
     if (kR1 <= kRbp || kR2 <= kR1 || kRbp <= 0 || kEvents <= 0 || kEtamax <= kEtamin || kL <= 0 || kSigmaz <= 0 || kSigmax <= 0 || kSigmay <= 0 || kVerbositySimu <= 0) {
-        cout << "Error in parameters setting" << endl;
-        return;
+      cout << "Error in parameters setting" << endl;
+      return;
     }
 
     gRandom->SetSeed(kSeed);
 
-    // Open the histogram file and retrieve eta and multiplicity histograms
-    TFile *inputFile = TFile::Open("kinem.root", "READ");
-    if (!inputFile || inputFile->IsZombie()) {
-        cout << "Error: Could not open kinem.root" << endl;
-        return;
-    }
-    TH1D *etaHist = (TH1D*)inputFile->Get("heta");
-    TH1D *multHist = (TH1D*)inputFile->Get("hmul");
-    if (!etaHist || !multHist) {
-        cout << "Error: Could not load histograms" << endl;
-        inputFile->Close();
-        return;
-    }
+     // Open the histogram file and retrieve eta and multiplicity histograms
+     TFile *inputFile = TFile::Open("kinem.root", "READ");
+       if (!inputFile || inputFile->IsZombie()) {
+	 cout << "Error: Could not open kinem.root" << endl;
+	 return;
+       }
+       TH1D *etaHist = (TH1D*)inputFile->Get("heta");
+       TH1D *multHist = (TH1D*)inputFile->Get("hmul");
+	if (!etaHist || !multHist) {
+	    cout << "Error: Could not load histograms" << endl;
+	    inputFile->Close();
+	    return;
+	}
 
+    //output file for reconstruction purposes
+    char a;
+    if (kMul=="No"||kMul=="NO"||kMul=="no") a='N'; else a='S';
+    FILE *hdata = fopen("data.txt","w");
+    fprintf (hdata, "%f %f %f %f %d %c", (float) kR1, (float) kR2, (float) kL, (float) kSigmaz, kEvents, a);	
+    fclose (hdata);
+    
     // Output file setup
     TFile *hfile = TFile::Open(kFile, "RECREATE");
     TTree *tree = new TTree("tree", "events");
@@ -144,4 +159,6 @@ void simulation() {
     delete inputFile;
     
     cout << "Simulation completed" << endl;
+    clock.Stop();
+    clock.Print();
 }
