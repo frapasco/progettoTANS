@@ -13,6 +13,7 @@
 #include <vector>
 #include <fstream>
 #include "TDirectory.h" 
+#include "TStopwatch.h"
 
 //headers include
 #include "Vertex.h"
@@ -45,6 +46,8 @@ void plot(const vector <double>* const vzTruep,const  vector <double>* const vzg
 ////////////////////////////////////////////////////////////////////
 
 void reconstruction(){
+  TStopwatch clock;
+  
   double step=0.05; //step histograms intersections with z
   double R1,R2,L,sigmaZ;
   int events;
@@ -322,7 +325,10 @@ void reconstruction(){
    fileReco->Close();
    file->Close();
 
-   cout<<"reconstruction completed"<<endl;	
+   cout<<"reconstruction completed"<<endl;
+   clock.Stop();
+   clock.Print();
+
  }
 
 
@@ -533,7 +539,6 @@ void reconstruction(){
    histo->Write();//scrittura istogrammi su file
    histo->ls();//controllo contenuto file
    histo->Close();	
-
  }
 
 
