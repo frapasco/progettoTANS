@@ -13,12 +13,22 @@ class Vertex : public TObject {
 
 public:  
   // Constructors and destructor
-  Vertex();                
-  Vertex(TString multV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90); // multV=distribution choice for multiplicity
+  Vertex();
+#ifdef UNIFORM
+  Vertex(TString varV, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
+#endif #ifdef KINEM
+  Vertex(TString varV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
+#endif #ifdef CONST
+  Vertex(TString varV, int multVal, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
+#endif
+  Vertex(TString varV, TString multV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90); // multV=distribution choice for multiplicity
+
   Vertex(const Vertex &v); // Copy constructor
   virtual ~Vertex();
-            
+
   void InitialDir(double min, double max, TH1D *etaHist); // Direction setter for collision products
+  void InitialDir1(TH1D *etaHist); // Direction setter for collision products
+  
   
   // Getters
   double GetX() const;
@@ -34,7 +44,8 @@ private:
  
   double fPhi, fTheta; // Polar and azimuthal angles
   
-  double Var(double s); // Box-Muller extraction for Gaussian
+  double VarBM(double s); // Box-Muller extraction for Gaussian
+  double VarROOT(double s);
   void MultUnif(int u1, int u2); // Uniform extraction for multiplicity in the interval [u1, u2]
   void MultFunc(TH1D *multHist); // Multiplicity from a given histogram
   

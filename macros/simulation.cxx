@@ -28,9 +28,10 @@ const int kEvents = 1000000;    // Number of primary vertices
 const double kEtamin = -2.;     // Boundaries for eta distribution for track generation
 const double kEtamax = +2.;
 
+const TString kVar = "no";      //Gaus method for extraction ("yes" = Box-Muller, "no" = ROOT)
 const TString kMul = "yes";     // Multiplicity option ("yes" = custom distribution, "no" = uniform)
 const bool kMs = true;          // Multiple scattering enabled (true = ON)
-const int kVerbositySimu = 10000000;   // Verbosity level - every how many events ti gives a printout
+const int kVerbositySimu = 1000000;   // Verbosity level - every how many events ti gives a printout
 const unsigned int kSeed = 18;  // Random seed
 const TString kFile = "simulation.root";  // Output file
 
@@ -58,12 +59,25 @@ void simulation() {
     inputFile->Close();
     return;
   }
-  
+  //modifying histo limits
+  TAxis *x = etaHist->GetXaxis();
+  double step = x->GetBinWidth(1);
+  int b1 = x->FindBin(kEtamin);
+  int b2 = x->FindBin(kEtamax); 
+  double xLow = x->GetBinLowEdge(b1);
+  double xHigh = x->GetBinUpEdge(b2);
+  int nBins = b2-b1+1;
+  double step2 = (xHigh-xLow)/nBins;
+  TH1D *etaHist2 = new TH1D("etaHist2", "eta distribution", nBins,xLow,xHigh);
+  int j=1;
+  for(int i=b1;i<=b2;i++)
+    etaHist2->SetBinContent(j++,etaHist->GetBinContent(i));
+   
   //output file for reconstruction purposes
-  char a;
-  if (kMul=="No"||kMul=="NO"||kMul=="no") a='N'; else a='S';
+  char choice;
+  if (kMul=="No"||kMul=="NO"||kMul=="no") choice='N'; else choice='S';
   FILE *hdata = fopen("data.txt","w");
-  fprintf (hdata, "%f %f %f %f %d %c", (float) kR1, (float) kR2, (float) kL, (float) kSigmaz, kEvents, a);	
+  fprintf (hdata, "%f %f %f %f %d %c", (float) kR1, (float) kR2, (float) kL, (float) kSigmaz, kEvents, choice);	
   fclose (hdata);
   
   // Output file setup
@@ -89,10 +103,10 @@ void simulation() {
     if (i % kVerbositySimu == 0) cout << "\n \n  EVENT  " << i + 1 << endl;
     
     // Initialize vertex with preloaded multiplicity histogram
-    vertex = new Vertex(kMul, multHist, kSigmax, kSigmay, kSigmaz);
+    vertex = new Vertex(kVar, kMul, multHist, kSigmax, kSigmay, kSigmaz);
     
     // Set initial direction using the eta histogram
-    vertex->InitialDir(kEtamin, kEtamax, etaHist);
+    vertex->InitialDir1(etaHist2);
     
     int nParticle = vertex->GetM(); // Retrieve particle multiplicity for the vertex
     if (i % kVerbositySimu == 0) cout << "Vertex created with " << nParticle << " particles" << endl;

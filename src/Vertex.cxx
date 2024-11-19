@@ -3,6 +3,7 @@
 #include "TMath.h"
 #include "TH1D.h"
 #include "Vertex.h"
+#include "TAxis.h"
 
 using namespace std;
 using namespace TMath;
@@ -18,12 +19,18 @@ Vertex::Vertex() : TObject() {
 }
 
 // Standard constructor with multiplicity options
-Vertex::Vertex(TString multV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1, int u2) : TObject() {
+Vertex::Vertex(TString varV, TString multV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1, int u2) : TObject() {
     fMulti = 0;
-    fX = Var(sigmaX);  // x, y, z extracted with a Gaussian centered in the origin
-    fY = Var(sigmaY);   
-    fZ = Var(sigmaZ);
-    
+    // Choose gaus var extraction based on user input
+    if (varV == "No" || varV == "NO" || varV == "no"){
+        fX = VarROOT(sigmaX);  // x, y, z extracted with a Gaussian centered in the origin
+        fY = VarROOT(sigmaY);   
+        fZ = VarROOT(sigmaZ);
+    } else {
+        fX = VarBM(sigmaX);  // x, y, z extracted with a Gaussian centered in the origin
+        fY = VarBM(sigmaY);   
+        fZ = VarBM(sigmaZ);
+    }
     // Choose multiplicity extraction based on user input
     if (multV == "No" || multV == "NO" || multV == "no") {
         this->MultUnif(u1, u2); // Uniform multiplicity extraction
@@ -46,7 +53,7 @@ Vertex::Vertex(const Vertex &v) :
 Vertex::~Vertex() {}
 
 // Box-Muller method for Gaussian extraction
-double Vertex::Var(double s) { 
+double Vertex::VarBM(double s) { 
     if (s > 0) {
         double u1 = gRandom->Rndm(); 
         double u2 = gRandom->Rndm();   
@@ -56,6 +63,16 @@ double Vertex::Var(double s) {
         return 0;
     }
 }
+// ROOT Gaus method, using W. Hoermann and G. Derflinger ACR
+double Vertex::VarROOT(double s) { 
+    if (s > 0) {
+        return gRandom->Gaus(0,s);
+    } else {  
+        cout << "Error: sigma <= 0" << endl;
+        return 0;
+    }
+}
+
 
 // Getters for vertex properties
 double Vertex::GetX() const { return fX; }
@@ -86,7 +103,7 @@ void Vertex::MultFunc(TH1D *multHist) {
 // Initializes the initial direction; min and max are for reducing the range in pseudorapidity
 void Vertex::InitialDir(double min, double max, TH1D *etaHist) { 
     if (max < min) { // Swap limits if out of order
-        swap(max, min);
+        swap(max,min);
     } else if (max == min) {
         cout << "Error: etaMax == etaMin" << endl; 
         return;
@@ -103,5 +120,17 @@ void Vertex::InitialDir(double min, double max, TH1D *etaHist) {
         eta = etaHist->GetRandom();
     } while (eta > max || eta < min); // Retry until within desired range
     
+    fTheta = 2 * ATan(Exp(-eta));
+}
+
+void Vertex::InitialDir1(TH1D *etaHist) { 
+    fPhi = gRandom->Rndm() * 2 * Pi(); // Phi extraction
+    if (etaHist == nullptr) {
+        cout << "Error: eta histogram is null" << endl;
+        return;
+    }
+    
+    double eta;
+    eta = etaHist->GetRandom();
     fTheta = 2 * ATan(Exp(-eta));
 }
