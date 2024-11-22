@@ -21,7 +21,7 @@
 #include "Hit.h"
 
 using namespace std;
-const int kVerbosityReco=10000000; //verbosity
+const int kVerbosityReco=100000; //verbosity
 const int kLimit1=17; //last bin to read for histograms for given multiplicity
 const int kLimit2=21; //last bin to read for histograms for uniform multiplicity
 const double kNoisefrac=1.2; //ratio for noise/multiplicity points
@@ -39,11 +39,15 @@ const string kData="data.txt";  //config file for the run data
 //resolution vs multiplicity, efficiency vs zTrue, resolution vs zTrue)
 ////////////////////////////////////////////////////////////////////
 
-void plot(const vector <double>* const vzTruep,const  vector <double>* const vzgrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue);
+void analysis(const vector <double>* const vzTruep,const  vector <double>* const vzgrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue);
 
 ////////////////////////////////////////////////////////////////////
 //method for smearing points, generating noise and reconstruct the primary vertex out of tracklets
 ////////////////////////////////////////////////////////////////////
+
+double phiMax(){
+  
+}
 
 void reconstruction(){
   TStopwatch clock;
@@ -111,13 +115,13 @@ void reconstruction(){
      new ((*clone2)[i]) Hit();
    } //in order to having a non zero dimension obj
 
-   Vertex *verlec = new Vertex(); //creation of a Vertex obj
+   Vertex *vertMCtruth = new Vertex(); //creation of a Vertex obj
    inputTree->GetBranch("tclone1")->SetAutoDelete(kFALSE); //prevents TClonesArray from reusing space allocated by the previous obj, setted for redundancy since it is kFALSE by default
    inputTree->SetBranchAddress("tclone1",&clone1);
    inputTree->GetBranch("tclone2")->SetAutoDelete(kFALSE);
    inputTree->SetBranchAddress("tclone2",&clone2);
    TBranch *b3=inputTree->GetBranch("Vertex");
-   b3->SetAddress(&verlec); //reading Vertex
+   b3->SetAddress(&vertMCtruth); //reading Vertex
    clone1->Clear(); //cleaning clone1 e clone2
    clone2->Clear();
 
@@ -174,11 +178,11 @@ void reconstruction(){
      element1=0;
      element2=0;	  
      delete vertexRec;
-     zIntersecHisto->Reset("ICES"); //AAAAAAA why just ICES?
+     zIntersecHisto->Reset("ICES");
      inputTree->GetEntry(ev); //getting event
      nlines1 = clone1->GetEntriesFast(); //number of events in clone1
      nlines2 = clone2->GetEntriesFast(); //number of events in clone2
-     vertexRec = new Vertex(*verlec); //clone of verlec in vertexRec
+     vertexRec = new Vertex(*vertMCtruth); //clone of vertMCtruth in vertexRec
      
      //reading of intersection points from inputTree and smearing of them
      //loop on simulated tracks
@@ -191,7 +195,7 @@ void reconstruction(){
        
        if(TMath::Abs(i1->GetZ())<L/2){ //check that after smearing the hit point still lies in T1
 	 x1=i1->GetX();
-	 y1=i1->GetY() ;
+	 y1=i1->GetY();
 	 z1=i1->GetZ();	 
 	 new (int1[t]) Hit(x1,y1,z1,i1->GetLabel());      
 	 element1++;      
@@ -216,7 +220,7 @@ void reconstruction(){
      if(ev%kVerbosityReco==0)cout<<"Hit outside T1: "<<out1<<"  Hit outside T2: "<<out2<<endl;
      
      //adding noise
-     int Nnoise = (int) (verlec->GetM())*kNoisefrac; //assuming the number of hits due to noise is equal on both detectors #T1 = #T2
+     int Nnoise = (int) (vertMCtruth->GetM())*kNoisefrac; //assuming the number of hits due to noise is equal on both detectors #T1 = #T2
      for(int j=element1;j<element1+Nnoise;j++){
        new (int1[j]) Hit(R1,L);
      } 
@@ -241,7 +245,7 @@ void reconstruction(){
 	   y2=i2->GetY();
 	   z1=i1->GetZ();
 	   z2=i2->GetZ();
-	   Track *t = new Track(x2-x1,y2-y1,z2-z1); 
+	   Track *t = new Track(x2-x1,y2-y1,z2-z1);  
 	   ntraccia++; 
 	   totTracklets++;
 	   Z=200000000;  //initialized far outside the expected region in order to check the method
@@ -282,17 +286,17 @@ void reconstruction(){
 	 else {zrecrms=0.05;} //0.05 is chosen as error on an average of a single value
 	 if (ev%kVerbosityReco==0) cout<<"zrec= "<<zrec<<" +- "<<zrecrms<<endl;
 	 vzrec->push_back(zrec); //filling the vector
-	 vzTrue->push_back(verlec->GetZ());	
-	 vzmulti->push_back(verlec->GetM());
+	 vzTrue->push_back(vertMCtruth->GetZ());	
+	 vzmulti->push_back(vertMCtruth->GetM());
 	 vzrecrms->push_back(zrecrms); 
 	 sizevec++; //counter
        }
      }
 
      if (ev%kVerbosityReco==0){new TCanvas; zIntersecHisto->DrawCopy();} 
-     if(verlec->GetZ()<1*sigmaZ && verlec->GetM()<multiBin[limit]) tot1multi->Fill(verlec->GetM());  
-     if(verlec->GetZ()<3*sigmaZ && verlec->GetM()<multiBin[limit]) tot3multi->Fill(verlec->GetM());    
-     totz->Fill(verlec->GetZ()); //filling the histos with simu events (efficiency=reco/total)
+     if(vertMCtruth->GetZ()<1*sigmaZ && vertMCtruth->GetM()<multiBin[limit]) tot1multi->Fill(vertMCtruth->GetM());  
+     if(vertMCtruth->GetZ()<3*sigmaZ && vertMCtruth->GetM()<multiBin[limit]) tot3multi->Fill(vertMCtruth->GetM());    
+     totz->Fill(vertMCtruth->GetZ()); //filling the histos with simu events (efficiency=reco/total)
 
      //writing on TTree and clearing the TClones
      treeReco->Fill();
@@ -305,8 +309,8 @@ void reconstruction(){
 
    cout<<"\n \n Zintersection not found correctly for  "<< noTrack<<" Tracklet on "<<totTracklets<<" reconstrucetd Trackelet"<<endl; 
 
-   plot(vzTrue, vzrec,  vzmulti, vzrecrms, multiBin, arrayLenghtMulti, tot1multi, tot3multi, limit, sigmaZ,zbin,  arrayLenghtZ, totz, sizevec);
-
+   analysis(vzTrue, vzrec,  vzmulti, vzrecrms, multiBin, arrayLenghtMulti, tot1multi, tot3multi, limit, sigmaZ,zbin,  arrayLenghtZ, totz, sizevec);
+   
    delete  vzTrue; //deleting the vectors
    delete  vzrec;
    delete  vzmulti;	
@@ -319,7 +323,7 @@ void reconstruction(){
    delete intersecPointDet2;
    delete clone1;
    delete clone2;
-   delete verlec;
+   delete vertMCtruth;
    delete vertexRec;
 
    fileReco->Close();
@@ -333,7 +337,7 @@ void reconstruction(){
 
 
 
- void plot(const vector <double>* const vzTruep,const  vector <double>* const vzrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue){
+ void analysis(const vector <double>* const vzTruep,const  vector <double>* const vzrecp, const vector <int> * const vzmultip, const vector <double> * const vzrecrmsp, const double * const multiBin, const int arrayLenghtMulti, TH1D *tot1multi, TH1D *tot3multi, const int limit, const double sigmaZ, const double * const zbin, const int arrayLenghtZ, TH1D *totz, const int sizetrue){
 
    TFile *histo = TFile::Open(kHisto, "RECREATE");  //histograms file
    const vector <double> &vzTrue = *vzTruep;
@@ -536,6 +540,8 @@ void reconstruction(){
      }
    }
 
+   cout<<"\n \n The events well reconstructed in 1sigma are "<<histo_ok[0]->GetEntries()<<endl;
+   cout<<"The events well reconstructed in 1sigma are "<<histo_ok[1]->GetEntries()<<endl;
    histo->Write();//scrittura istogrammi su file
    histo->ls();//controllo contenuto file
    histo->Close();	

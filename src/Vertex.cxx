@@ -34,6 +34,8 @@ Vertex::Vertex(TString varV, TString multV, TH1D *multHist, double sigmaX, doubl
     // Choose multiplicity extraction based on user input
     if (multV == "No" || multV == "NO" || multV == "no") {
         this->MultUnif(u1, u2); // Uniform multiplicity extraction
+    } else if (multV == "fixed"){
+        fMulti = 12;
     } else {
         this->MultFunc(multHist); // Use distribution from histogram
     }

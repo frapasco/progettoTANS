@@ -14,13 +14,6 @@ class Vertex : public TObject {
 public:  
   // Constructors and destructor
   Vertex();
-#ifdef UNIFORM
-  Vertex(TString varV, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
-#endif #ifdef KINEM
-  Vertex(TString varV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
-#endif #ifdef CONST
-  Vertex(TString varV, int multVal, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90);
-#endif
   Vertex(TString varV, TString multV, TH1D *multHist, double sigmaX, double sigmaY, double sigmaZ, int u1=1, int u2=90); // multV=distribution choice for multiplicity
 
   Vertex(const Vertex &v); // Copy constructor

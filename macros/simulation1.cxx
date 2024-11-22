@@ -29,7 +29,7 @@ const double kEtamin = -2.;     // Boundaries for eta distribution for track gen
 const double kEtamax = +2.;
 
 const TString kVar = "no";     //Gaus method for extraction ("yes" = Box-Muller, "no" = ROOT)
-const TString kMul = "yes";     // Multiplicity option ("yes" = custom distribution, "no" = uniform)
+const TString kMul = "yes";     // Multiplicity option ("yes" = custom distribution, "no" = uniform, "fixed" = fixed multiplicity = 12)
 const bool kMs = true;          // Multiple scattering enabled (true = ON)
 const int kVerbositySimu = 1000000;   // Verbosity level - every how many events ti gives a printout
 const unsigned int kSeed = 18;  // Random seed
@@ -62,7 +62,7 @@ void Simulation(){
   }
 
   gRandom->SetSeed();
-#ifdef KINEM
+
   TFile *inputFile = TFile::Open("kinem.root", "READ");
   if(!inputFile || inputFile->IsZombie()){
     cout << "Error: Could not open kinem.root" << endl;
@@ -75,7 +75,6 @@ void Simulation(){
     inputFile->Close();
     return;
   }  
-#endif
 
   //output file for reconstruction purposes
   char choice;
@@ -102,20 +101,89 @@ void Simulation(){
 
   int vertexNoHit = 0; // Tracks number of vertices without interaction
   tree->SetDirectory(hfile); // Set output file for tree storage
-  
+
+  //loop over the events
   for(int i=0;i<kEvents;i++){
+    int lost1 = 0, lost2 = 0, lostAll = 0;
 #ifdef VERBOSITY
-  cout<<"event: "<<i+1<<" completed"<<endl;
+    cout<<"event: "<<i+1<<endl;
 #endif
+    
+    //creation of a vertex
+    vertex = new Vertex(kVar, kMul, multHist, kSigmax, kSigmay, kSigmaz);
+    
+    vertex->InitialDir1(etaHist);
 
-  //creation of a vertex
-  vertex = new Vertex();
-  
-  
-  //storing in TClonesArray
+    int nParticle = vertex->GetM();// Retrieve particle multiplicity for the vertex
+#ifdef VERBOSITY
+    if (i % kVerbositySimu == 0)
+      cout << "Vertex created with " << nParticle << " particles" << endl;
+#endif
+    //loop over the generated particles
+    for(int j=0;j<=nParticle;j++){
+      // Propagate each track through the beam pipe and detectors
+      Track *tbp = new Track(vertex->GetTheta(), vertex->GetPhi());
+      double Xbp, Ybp, Zbp, X1, Y1, Z1, X2, Y2, Z2;
+      // Check for intersection with beam pipe
+      if (tbp->Intersection(vertex->GetX(), vertex->GetY(), vertex->GetZ(), Xbp, Ybp, Zbp, kRbp, kL)) {
+	new ((*bp)[j]) Hit(Xbp, Ybp, Zbp, j);
+	tbp->MultipleScattering(kMs); // Apply multiple scattering
+	
+	Track *t1 = new Track(tbp->GetTheta(), tbp->GetPhi()); // Propagate to T1
+	if (t1->Intersection(Xbp, Ybp, Zbp, X1, Y1, Z1, kR1, kL)) {
+	  new ((*clone1)[j - lost1]) Hit(X1, Y1, Z1, j);
+	  t1->MultipleScattering(kMs); // Apply scattering for T1
+	  
+	  Track *t2 = new Track(t1->GetTheta(), t1->GetPhi()); // Propagate to T2
+	  if (t2->Intersection(X1, Y1, Z1, X2, Y2, Z2, kR2, kL)) {
+	    new ((*clone2)[j - lost2]) Hit(X2, Y2, Z2, j);
+	  } else {
+	    lost2++;
+	  }
+	  delete t2;
+	} else { // Check for intersection with T2 only
+	  if (t1->Intersection(Xbp, Ybp, Zbp, X2, Y2, Z2, kR2, kL)) {
+	    new ((*clone2)[j - lost2]) Hit(X2, Y2, Z2, j);
+	  } else {
+	    lost2++;
+	    lostAll++;
+	  }
+	  lost1++;
+	}
+	delete t1;
+      }
+      delete tbp;
+    }
+    
+    if (lostAll == nParticle) vertexNoHit++; // Track vertices without detector interaction
 
+
+      
+
+    
+    tree->Fill(); // Fill the tree with the event data
+    
+    clone1->Clear(); // Clear arrays for the next event
+    clone2->Clear();
+    bp->Clear();
+    delete vertex; // Delete the current vertex
   }
-
+  // Summary output
+  cout << endl;
+  cout << "Out of " << kEvents << " vertices generated, " << vertexNoHit << " didn't interact with any of the detectors" << endl;
+  
+  // Write the tree to the output file and clean up
+  hfile->cd();
+  tree->Write();
+  hfile->Close();
+  inputFile->Close();
+  
+  // Free memory
+  delete bp;
+  delete clone1;
+  delete clone2;
+  delete hfile;
+  delete inputFile;
   cout<<"Simulation Completed "<<endl;
 
   clock.Stop();
